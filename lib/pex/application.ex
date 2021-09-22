@@ -8,6 +8,7 @@ defmodule Pex.Application do
   @impl true
   def start(_type, _args) do
     children = [
+      Pex.Repo
       # Starts a worker by calling: Pex.Worker.start_link(arg)
       # {Pex.Worker, arg}
     ]
