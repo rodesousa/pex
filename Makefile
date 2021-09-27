@@ -1,8 +1,22 @@
-postgres_run:
-	@docker run -it -d --name pex_db -p 5432:5432 -e POSTGRES_USER=user -e POSTGRES_PASSWORD=dev postgres
+CMD = @docker run -d --name arkhn_livebook
+CMD += -p 8080:8080 --pull always -u $(id -u):$(id -g)
+CMD += -v data:/data
+CMD += -v /var/run/docker.sock:/var/run/docker.sock 
+CMD += -e BINANCE_API_KEY=${BINANCE_API_KEY}
+CMD += -e BINANCE_SECRET_KEY=${BINANCE_SECRET_KEY}
+CMD += -e KUCOIN_API_KEY=${KUCOIN_API_KEY}
+CMD += -e KUCOIN_API_SECRET=${KUCOIN_API_SECRET}
+CMD += -e KUCOIN_API_PASSPHRASE=${KUCOIN_API_PASSPHRASE}
+CMD += livebook/livebook
 
-postgres_start:
-	@docker start pex_db
+run:
+	${CMD}
 
-postgres_rm:
-	@docker rm -f pex_db
+start:
+	@docker start arkhn_livebook
+
+delete:
+	@docker rm -f arkhn_livebook
+
+logs:
+	@docker logs arkhn_livebook
