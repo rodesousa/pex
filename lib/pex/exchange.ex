@@ -16,7 +16,7 @@ defmodule Pex.Exchange do
   @doc """
   Returns all coin of exchange
   """
-  @callback coin_list() :: [%Exchange{}]
+  @callback coins_list() :: [%Exchange{}]
 
   @doc """
   Set exchange credentials

@@ -10,11 +10,12 @@ defmodule Pex.Trade.Purchase do
     has_many(:orders, Pex.Trade.Order)
   end
 
-  @attrs [:symbol, :quantity, :price]
+  @attrs_required [:symbol, :price]
+  @attrs [:quantity] ++ @attrs_required
 
   def changeset(purchase, params \\ %{}) do
     purchase
     |> cast(params, @attrs)
-    |> validate_required(@attrs)
+    |> validate_required(@attrs_required)
   end
 end

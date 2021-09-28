@@ -1,0 +1,641 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# Trading
+
+## Creds
+
+```elixir
+Pex.BinanceExchange.creds()
+```
+
+```output
+:ok
+```
+
+## Coin list
+
+```elixir
+Pex.BinanceExchange.coins_list()
+```
+
+```output
+[
+  %Pex.Exchange{free: 704.84736741, locked: 102.978, symbol: "USDT"},
+  %Pex.Exchange{free: 0.0, locked: 347.0, symbol: "WABI"},
+  %Pex.Exchange{free: 0.0, locked: 17.0, symbol: "NAV"},
+  %Pex.Exchange{free: 14.942, locked: 14.0, symbol: "STEEM"},
+  %Pex.Exchange{free: 0.0, locked: 384.0, symbol: "CHZ"},
+  %Pex.Exchange{free: 0.0, locked: 844.0, symbol: "DUSK"},
+  %Pex.Exchange{free: 0.0, locked: 1246.0, symbol: "PERL"},
+  %Pex.Exchange{free: 0.0, locked: 103.0, symbol: "SPARTA"},
+  %Pex.Exchange{free: 0.0, locked: 150.0, symbol: "HARD"},
+  %Pex.Exchange{free: 54.000517, locked: 54.0, symbol: "DODO"}
+]
+```
+
+## Synchronize order
+
+```elixir
+Pex.BinanceTrade.synchronize_orders()
+```
+
+```output
+
+01:28:21.188 [debug] QUERY OK source="orders" db=7.4ms decode=1.4ms queue=1.8ms idle=1416.8ms
+SELECT o0."id", o0."symbol", o0."type", o0."quantity", o0."price", o0."state", o0."exchange_order_id", o0."side", o0."platform", o0."purchase_id", o0."inserted_at", o0."updated_at" FROM "orders" AS o0 WHERE (o0."exchange_order_id" = $1) ["106657468"]
+
+01:28:21.198 [debug] QUERY OK source="orders" db=2.4ms idle=1436.1ms
+SELECT o0."id", o0."symbol", o0."type", o0."quantity", o0."price", o0."state", o0."exchange_order_id", o0."side", o0."platform", o0."purchase_id", o0."inserted_at", o0."updated_at" FROM "orders" AS o0 WHERE (o0."exchange_order_id" = $1) ["45871175"]
+
+01:28:21.200 [debug] QUERY OK source="orders" db=2.0ms idle=1438.8ms
+SELECT o0."id", o0."symbol", o0."type", o0."quantity", o0."price", o0."state", o0."exchange_order_id", o0."side", o0."platform", o0."purchase_id", o0."inserted_at", o0."updated_at" FROM "orders" AS o0 WHERE (o0."exchange_order_id" = $1) ["87460819"]
+
+01:28:21.203 [debug] QUERY OK source="orders" db=2.5ms idle=1441.0ms
+SELECT o0."id", o0."symbol", o0."type", o0."quantity", o0."price", o0."state", o0."exchange_order_id", o0."side", o0."platform", o0."purchase_id", o0."inserted_at", o0."updated_at" FROM "orders" AS o0 WHERE (o0."exchange_order_id" = $1) ["3231824719"]
+
+01:28:21.205 [debug] QUERY OK source="orders" db=1.9ms idle=1443.8ms
+SELECT o0."id", o0."symbol", o0."type", o0."quantity", o0."price", o0."state", o0."exchange_order_id", o0."side", o0."platform", o0."purchase_id", o0."inserted_at", o0."updated_at" FROM "orders" AS o0 WHERE (o0."exchange_order_id" = $1) ["84694023"]
+
+01:28:21.207 [debug] QUERY OK source="orders" db=2.2ms idle=1445.8ms
+SELECT o0."id", o0."symbol", o0."type", o0."quantity", o0."price", o0."state", o0."exchange_order_id", o0."side", o0."platform", o0."purchase_id", o0."inserted_at", o0."updated_at" FROM "orders" AS o0 WHERE (o0."exchange_order_id" = $1) ["84694024"]
+
+01:28:21.210 [debug] QUERY OK source="orders" db=2.1ms idle=1448.3ms
+SELECT o0."id", o0."symbol", o0."type", o0."quantity", o0."price", o0."state", o0."exchange_order_id", o0."side", o0."platform", o0."purchase_id", o0."inserted_at", o0."updated_at" FROM "orders" AS o0 WHERE (o0."exchange_order_id" = $1) ["84694110"]
+
+01:28:21.212 [debug] QUERY OK source="orders" db=2.6ms idle=1450.7ms
+SELECT o0."id", o0."symbol", o0."type", o0."quantity", o0."price", o0."state", o0."exchange_order_id", o0."side", o0."platform", o0."purchase_id", o0."inserted_at", o0."updated_at" FROM "orders" AS o0 WHERE (o0."exchange_order_id" = $1) ["84694111"]
+
+01:28:21.215 [debug] QUERY OK source="orders" db=2.4ms idle=1453.6ms
+SELECT o0."id", o0."symbol", o0."type", o0."quantity", o0."price", o0."state", o0."exchange_order_id", o0."side", o0."platform", o0."purchase_id", o0."inserted_at", o0."updated_at" FROM "orders" AS o0 WHERE (o0."exchange_order_id" = $1) ["150563233"]
+
+01:28:21.218 [debug] QUERY OK source="orders" db=2.1ms idle=1456.3ms
+SELECT o0."id", o0."symbol", o0."type", o0."quantity", o0."price", o0."state", o0."exchange_order_id", o0."side", o0."platform", o0."purchase_id", o0."inserted_at", o0."updated_at" FROM "orders" AS o0 WHERE (o0."exchange_order_id" = $1) ["150563234"]
+
+01:28:21.218 [debug] QUERY OK source="orders" db=0.4ms idle=32.7ms
+SELECT o0."id", o0."symbol", o0."type", o0."quantity", o0."price", o0."state", o0."exchange_order_id", o0."side", o0."platform", o0."purchase_id", o0."inserted_at", o0."updated_at" FROM "orders" AS o0 WHERE (o0."exchange_order_id" = $1) ["770534325"]
+
+01:28:21.219 [debug] QUERY OK source="orders" db=0.5ms idle=20.8ms
+SELECT o0."id", o0."symbol", o0."type", o0."quantity", o0."price", o0."state", o0."exchange_order_id", o0."side", o0."platform", o0."purchase_id", o0."inserted_at", o0."updated_at" FROM "orders" AS o0 WHERE (o0."exchange_order_id" = $1) ["770534326"]
+
+01:28:21.220 [debug] QUERY OK source="orders" db=0.4ms idle=19.4ms
+SELECT o0."id", o0."symbol", o0."type", o0."quantity", o0."price", o0."state", o0."exchange_order_id", o0."side", o0."platform", o0."purchase_id", o0."inserted_at", o0."updated_at" FROM "orders" AS o0 WHERE (o0."exchange_order_id" = $1) ["17357658"]
+
+01:28:21.220 [debug] QUERY OK source="orders" db=0.4ms idle=17.3ms
+SELECT o0."id", o0."symbol", o0."type", o0."quantity", o0."price", o0."state", o0."exchange_order_id", o0."side", o0."platform", o0."purchase_id", o0."inserted_at", o0."updated_at" FROM "orders" AS o0 WHERE (o0."exchange_order_id" = $1) ["147225687"]
+
+01:28:21.221 [debug] QUERY OK source="orders" db=0.4ms idle=15.9ms
+SELECT o0."id", o0."symbol", o0."type", o0."quantity", o0."price", o0."state", o0."exchange_order_id", o0."side", o0."platform", o0."purchase_id", o0."inserted_at", o0."updated_at" FROM "orders" AS o0 WHERE (o0."exchange_order_id" = $1) ["119567099"]
+
+```
+
+```output
+:ok
+```
+
+## Old trades
+
+<!-- livebook:{"livebook_object":"cell_input","name":"limit","type":"number","value":"10"} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":"WABIBTC"} -->
+
+```elixir
+symbol = IO.gets("symbol") |> String.trim("\n")
+{limit, _a} = IO.gets("limit") |> Integer.parse()
+
+{:ok, data} = Binance.account_trade_list(symbol, limit)
+
+data
+```
+
+```output
+[
+  %Binance.HistoricalTrade{
+    id: 9875980,
+    is_best_match: true,
+    is_buyer_maker: nil,
+    price: "0.00000426",
+    qty: "115.00000000",
+    quote_qty: "0.00048990",
+    time: 1613527910606
+  },
+  %Binance.HistoricalTrade{
+    id: 10076360,
+    is_best_match: true,
+    is_buyer_maker: nil,
+    price: "0.00000515",
+    qty: "114.00000000",
+    quote_qty: "0.00058710",
+    time: 1615315890199
+  },
+  %Binance.HistoricalTrade{
+    id: 10747544,
+    is_best_match: true,
+    is_buyer_maker: nil,
+    price: "0.00001149",
+    qty: "90.00000000",
+    quote_qty: "0.00103410",
+    time: 1617408884513
+  },
+  %Binance.HistoricalTrade{
+    id: 11453860,
+    is_best_match: true,
+    is_buyer_maker: nil,
+    price: "0.00001103",
+    qty: "90.00000000",
+    quote_qty: "0.00099270",
+    time: 1620144497283
+  },
+  %Binance.HistoricalTrade{
+    id: 11456712,
+    is_best_match: true,
+    is_buyer_maker: nil,
+    price: "0.00001135",
+    qty: "347.00000000",
+    quote_qty: "0.00393845",
+    time: 1620155986554
+  }
+]
+```
+
+## Orders without Purchase
+
+```elixir
+Pex.Trade.orders_whitout_purchase()
+```
+
+```output
+
+01:37:37.771 [debug] QUERY OK source="orders" db=1.0ms queue=0.9ms idle=1006.0ms
+SELECT o0."id", o0."symbol", o0."type", o0."quantity", o0."price", o0."state", o0."exchange_order_id", o0."side", o0."platform", o0."purchase_id", o0."inserted_at", o0."updated_at" FROM "orders" AS o0 WHERE (o0."purchase_id" IS NULL) []
+
+```
+
+```output
+[
+  %Pex.Trade.Order{
+    __meta__: #Ecto.Schema.Metadata<:loaded, "orders">,
+    exchange_order_id: "106657468",
+    id: 16,
+    inserted_at: ~N[2021-09-28 20:56:02],
+    platform: "binance",
+    price: 1.015e-5,
+    purchase: #Ecto.Association.NotLoaded<association :purchase is not loaded>,
+    purchase_id: nil,
+    quantity: 347.0,
+    side: "SELL",
+    state: "open",
+    symbol: "WABIBTC",
+    type: nil,
+    updated_at: ~N[2021-09-28 20:56:02]
+  },
+  %Pex.Trade.Order{
+    __meta__: #Ecto.Schema.Metadata<:loaded, "orders">,
+    exchange_order_id: "45871175",
+    id: 17,
+    inserted_at: ~N[2021-09-28 20:56:02],
+    platform: "binance",
+    price: 2.8e-5,
+    purchase: #Ecto.Association.NotLoaded<association :purchase is not loaded>,
+    purchase_id: nil,
+    quantity: 17.0,
+    side: "SELL",
+    state: "open",
+    symbol: "NAVBTC",
+    type: nil,
+    updated_at: ~N[2021-09-28 20:56:02]
+  },
+  %Pex.Trade.Order{
+    __meta__: #Ecto.Schema.Metadata<:loaded, "orders">,
+    exchange_order_id: "87460819",
+    id: 18,
+    inserted_at: ~N[2021-09-28 20:56:02],
+    platform: "binance",
+    price: 3.368e-5,
+    purchase: #Ecto.Association.NotLoaded<association :purchase is not loaded>,
+    purchase_id: nil,
+    quantity: 14.0,
+    side: "SELL",
+    state: "open",
+    symbol: "STEEMBTC",
+    type: nil,
+    updated_at: ~N[2021-09-28 20:56:02]
+  },
+  %Pex.Trade.Order{
+    __meta__: #Ecto.Schema.Metadata<:loaded, "orders">,
+    exchange_order_id: "3231824719",
+    id: 19,
+    inserted_at: ~N[2021-09-28 20:56:02],
+    platform: "binance",
+    price: 1.1442,
+    purchase: #Ecto.Association.NotLoaded<association :purchase is not loaded>,
+    purchase_id: nil,
+    quantity: 90.0,
+    side: "BUY",
+    state: "open",
+    symbol: "XRPUSDT",
+    type: nil,
+    updated_at: ~N[2021-09-28 20:56:02]
+  },
+  %Pex.Trade.Order{
+    __meta__: #Ecto.Schema.Metadata<:loaded, "orders">,
+    exchange_order_id: "84694023",
+    id: 20,
+    inserted_at: ~N[2021-09-28 20:56:02],
+    platform: "binance",
+    price: 0.105,
+    purchase: #Ecto.Association.NotLoaded<association :purchase is not loaded>,
+    purchase_id: nil,
+    quantity: 422.0,
+    side: "SELL",
+    state: "open",
+    symbol: "DUSKUSDT",
+    type: nil,
+    updated_at: ~N[2021-09-28 20:56:02]
+  },
+  %Pex.Trade.Order{
+    __meta__: #Ecto.Schema.Metadata<:loaded, "orders">,
+    exchange_order_id: "84694024",
+    id: 21,
+    inserted_at: ~N[2021-09-28 20:56:02],
+    platform: "binance",
+    price: 0.225,
+    purchase: #Ecto.Association.NotLoaded<association :purchase is not loaded>,
+    purchase_id: nil,
+    quantity: 422.0,
+    side: "SELL",
+    state: "open",
+    symbol: "DUSKUSDT",
+    type: nil,
+    updated_at: ~N[2021-09-28 20:56:02]
+  },
+  %Pex.Trade.Order{
+    __meta__: #Ecto.Schema.Metadata<:loaded, "orders">,
+    exchange_order_id: "84694110",
+    id: 22,
+    inserted_at: ~N[2021-09-28 20:56:02],
+    platform: "binance",
+    price: 0.105,
+    purchase: #Ecto.Association.NotLoaded<association :purchase is not loaded>,
+    purchase_id: nil,
+    quantity: 422.0,
+    side: "SELL",
+    state: "open",
+    symbol: "DUSKUSDT",
+    type: nil,
+    updated_at: ~N[2021-09-28 20:56:02]
+  },
+  %Pex.Trade.Order{
+    __meta__: #Ecto.Schema.Metadata<:loaded, "orders">,
+    exchange_order_id: "84694111",
+    id: 23,
+    inserted_at: ~N[2021-09-28 20:56:02],
+    platform: "binance",
+    price: 0.225,
+    purchase: #Ecto.Association.NotLoaded<association :purchase is not loaded>,
+    purchase_id: nil,
+    quantity: 422.0,
+    side: "SELL",
+    state: "open",
+    symbol: "DUSKUSDT",
+    type: nil,
+    updated_at: ~N[2021-09-28 20:56:02]
+  },
+  %Pex.Trade.Order{
+    __meta__: #Ecto.Schema.Metadata<:loaded, "orders">,
+    exchange_order_id: "150563233",
+    id: 24,
+    inserted_at: ~N[2021-09-28 20:56:02],
+    platform: "binance",
+    price: 0.072,
+    purchase: #Ecto.Association.NotLoaded<association :purchase is not loaded>,
+    purchase_id: nil,
+    quantity: 1246.0,
+    side: "SELL",
+    state: "open",
+    symbol: "PERLUSDT",
+    type: nil,
+    updated_at: ~N[2021-09-28 20:56:02]
+  },
+  %Pex.Trade.Order{
+    __meta__: #Ecto.Schema.Metadata<:loaded, "orders">,
+    exchange_order_id: "150563234",
+    id: 25,
+    inserted_at: ~N[2021-09-28 20:56:02],
+    platform: "binance",
+    price: 0.1353,
+    purchase: #Ecto.Association.NotLoaded<association :purchase is not loaded>,
+    purchase_id: nil,
+    quantity: 1246.0,
+    side: "SELL",
+    state: "open",
+    symbol: "PERLUSDT",
+    type: nil,
+    updated_at: ~N[2021-09-28 20:56:02]
+  },
+  %Pex.Trade.Order{
+    __meta__: #Ecto.Schema.Metadata<:loaded, "orders">,
+    exchange_order_id: "770534325",
+    id: 26,
+    inserted_at: ~N[2021-09-28 20:56:02],
+    platform: "binance",
+    price: 0.23,
+    purchase: #Ecto.Association.NotLoaded<association :purchase is not loaded>,
+    purchase_id: nil,
+    quantity: 384.0,
+    side: "SELL",
+    state: "open",
+    symbol: "CHZUSDT",
+    type: nil,
+    updated_at: ~N[2021-09-28 20:56:02]
+  },
+  %Pex.Trade.Order{
+    __meta__: #Ecto.Schema.Metadata<:loaded, "orders">,
+    exchange_order_id: "770534326",
+    id: 27,
+    inserted_at: ~N[2021-09-28 20:56:02],
+    platform: "binance",
+    price: 0.33,
+    purchase: #Ecto.Association.NotLoaded<association :purchase is not loaded>,
+    purchase_id: nil,
+    quantity: 384.0,
+    side: "SELL",
+    state: "open",
+    symbol: "CHZUSDT",
+    type: nil,
+    updated_at: ~N[2021-09-28 20:56:02]
+  },
+  %Pex.Trade.Order{
+    __meta__: #Ecto.Schema.Metadata<:loaded, "orders">,
+    exchange_order_id: "17357658",
+    id: 28,
+    inserted_at: ~N[2021-09-28 20:56:02],
+    platform: "binance",
+    price: 8.5e-4,
+    purchase: #Ecto.Association.NotLoaded<association :purchase is not loaded>,
+    purchase_id: nil,
+    quantity: 103.0,
+    side: "SELL",
+    state: "open",
+    symbol: "SPARTABNB",
+    type: nil,
+    updated_at: ~N[2021-09-28 20:56:02]
+  },
+  %Pex.Trade.Order{
+    __meta__: #Ecto.Schema.Metadata<:loaded, "orders">,
+    exchange_order_id: "147225687",
+    id: 29,
+    inserted_at: ~N[2021-09-28 20:56:02],
+    platform: "binance",
+    price: 1.96,
+    purchase: #Ecto.Association.NotLoaded<association :purchase is not loaded>,
+    purchase_id: nil,
+    quantity: 150.0,
+    side: "SELL",
+    state: "open",
+    symbol: "HARDUSDT",
+    type: nil,
+    updated_at: ~N[2021-09-28 20:56:02]
+  },
+  %Pex.Trade.Order{
+    __meta__: #Ecto.Schema.Metadata<:loaded, "orders">,
+    exchange_order_id: "119567099",
+    id: 30,
+    inserted_at: ~N[2021-09-28 20:56:02],
+    platform: "binance",
+    price: 3.0,
+    purchase: #Ecto.Association.NotLoaded<association :purchase is not loaded>,
+    purchase_id: nil,
+    quantity: 54.0,
+    side: "SELL",
+    state: "open",
+    symbol: "DODOUSDT",
+    type: nil,
+    updated_at: ~N[2021-09-28 20:56:02]
+  }
+]
+```
+
+## Add Purchase
+
+<!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":""} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"price","type":"number","value":""} -->
+
+```elixir
+symbol = IO.gets("symbol") |> String.trim("\n")
+price = IO.gets("price")
+
+Pex.Trade.create_purchase(%{symbol: symbol, price: price})
+```
+
+```output
+{:error,
+ #Ecto.Changeset<
+   action: :insert,
+   changes: %{},
+   errors: [
+     symbol: {"can't be blank", [validation: :required]},
+     price: {"is invalid", [type: :float, validation: :cast]}
+   ],
+   data: #Pex.Trade.Purchase<>,
+   valid?: false
+ >}
+```
+
+## Link Order and purchase
+
+<!-- livebook:{"livebook_object":"cell_input","name":"order_id","type":"text","value":""} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"purchase_id","type":"text","value":""} -->
+
+```elixir
+order_id = IO.gets("order_id") |> String.trim("\n")
+purchase_id = IO.gets("purchase_id") |> String.trim("\n")
+
+Pex.Trade.update_order(order_id, %{purchase_id: purchase_id})
+```
+
+## Cancel all orders
+
+<!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":""} -->
+
+```elixir
+symbol = IO.gets("symbol") |> String.trim("\n")
+
+Binance.cancel_all_orders(symbol, 1000)
+```
+
+```output
+%{symbol: "", timestamp: 1000}
+```
+
+```output
+{:error, %{"code" => -1105, "msg" => "Parameter 'symbol' was empty."}}
+```
+
+## Cancel order
+
+<!-- livebook:{"livebook_object":"cell_input","name":"order_id","type":"text","value":""} -->
+
+```elixir
+order_id = IO.gets("order_id") |> String.trim("\n")
+
+Binance.cancel_order(symbol, 5000, order_id)
+```
+
+```output
+{:error, %{"code" => -1105, "msg" => "Parameter 'symbol' was empty."}}
+```
+
+## Sell limit
+
+<!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":""} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"quantity","type":"number","value":""} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"price","type":"number","value":""} -->
+
+```elixir
+{quantity, _} = IO.gets("quantity") |> Float.parse()
+{price, _} = IO.gets("price") |> Float.parse()
+symbol = IO.gets("symbol") |> String.trim("\n")
+
+Binance.create_order(symbol, "SELL", "LIMIT", quantity, price, "GTC")
+```
+
+## Sell stop limit
+
+<!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":"AVAXUSDT"} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"quantity","type":"text","value":""} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"stop","type":"number","value":""} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"price","type":"number","value":""} -->
+
+```elixir
+{quantity, _} = IO.gets("quantity") |> Float.parse()
+{stop, _} = IO.gets("stop") |> Float.parse()
+{price, _} = IO.gets("price") |> Float.parse()
+symbol = IO.gets("symbol") |> String.trim("\n")
+
+Binance.create_order(symbol, "SELL", "STOP_LOSS_LIMIT", quantity, price, "GTC", nil, stop)
+```
+
+## Buy Limit
+
+<!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":""} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"quantity","type":"number","value":""} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"price","type":"number","value":""} -->
+
+```elixir
+symbol = IO.gets("symbol") |> String.trim("\n")
+{quantity, _} = IO.gets("quantity") |> Float.parse()
+{price, _} = IO.gets("price") |> Float.parse()
+
+Binance.order_limit_buy(symbol, quantity, price)
+```
+
+## Buy Stop Limit
+
+<!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":""} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"quantity","type":"number","value":""} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"stop","type":"number","value":""} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"price","type":"number","value":""} -->
+
+```elixir
+{quantity, _} = IO.gets("quantity") |> Float.parse()
+{stop, _} = IO.gets("stop") |> Float.parse()
+{price, _} = IO.gets("price") |> Float.parse()
+symbol = IO.gets("symbol") |> String.trim("\n")
+
+Binance.create_order(
+  symbol,
+  "BUY",
+  "STOP_LOSS_LIMIT",
+  quantity,
+  price,
+  "GTC",
+  nil,
+  stop,
+  nil,
+  1000
+)
+```
+
+## SELL OCO
+
+<!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":""} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"quantity","type":"number","value":""} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"price","type":"number","value":""} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"stop","type":"number","value":""} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"limit","type":"number","value":""} -->
+
+```elixir
+{quantity, _} = IO.gets("quantity") |> Float.parse()
+{stop, _} = IO.gets("stop") |> Float.parse()
+{price, _} = IO.gets("price") |> Float.parse()
+{limit, _} = IO.gets("limit") |> Float.parse()
+symbol = IO.gets("symbol") |> String.trim("\n")
+
+Binance.create_oco_order(symbol, "SELL", quantity, price, stop, limit)
+```
+
+```output
+{:ok,
+ %{
+   "contingencyType" => "OCO",
+   "listClientOrderId" => "ADZzckhMVCBtjgiFUCI7YR",
+   "listOrderStatus" => "EXECUTING",
+   "listStatusType" => "EXEC_STARTED",
+   "orderListId" => 45641045,
+   "orderReports" => [
+     %{
+       "clientOrderId" => "ewVdxURJswxNfpBOvUFVOi",
+       "cummulativeQuoteQty" => "0.00000000",
+       "executedQty" => "0.00000000",
+       "orderId" => 650667135,
+       "orderListId" => 45641045,
+       "origQty" => "1.60000000",
+       "price" => "54.90000000",
+       "side" => "SELL",
+       "status" => "NEW",
+       "stopPrice" => "55.00000000",
+       "symbol" => "AVAXUSDT",
+       "timeInForce" => "GTC",
+       "transactTime" => 1632326187826,
+       "type" => "STOP_LOSS_LIMIT"
+     },
+     %{
+       "clientOrderId" => "we38cngoBXYrqbUd5vjhRH",
+       "cummulativeQuoteQty" => "0.00000000",
+       "executedQty" => "0.00000000",
+       "orderId" => 650667136,
+       "orderListId" => 45641045,
+       "origQty" => "1.60000000",
+       "price" => "75.13000000",
+       "side" => "SELL",
+       "status" => "NEW",
+       "symbol" => "AVAXUSDT",
+       "timeInForce" => "GTC",
+       "transactTime" => 1632326187826,
+       "type" => "LIMIT_MAKER"
+     }
+   ],
+   "orders" => [
+     %{"clientOrderId" => "ewVdxURJswxNfpBOvUFVOi", "orderId" => 650667135, "symbol" => "AVAXUSDT"},
+     %{"clientOrderId" => "we38cngoBXYrqbUd5vjhRH", "orderId" => 650667136, "symbol" => "AVAXUSDT"}
+   ],
+   "symbol" => "AVAXUSDT",
+   "transactionTime" => 1632326187826
+ }}
+```

@@ -1,0 +1,15 @@
+# FTX
+
+## Deps
+
+```elixir
+Mix.install([
+  {:ex_ftx, "~> 0.0.13"}
+])
+```
+
+```elixir
+
+```
+
+## Coin list

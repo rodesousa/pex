@@ -1,8 +1,11 @@
-defmodule Pex.Exchange.Binance do
+defmodule Pex.BinanceExchange do
   alias Pex.Exchange
   @behaviour Exchange
 
   @impl Exchange
+  @doc """
+  See behavior doc
+  """
   def creds() do
     if System.get_env("BINANCE_API_KEY") == "" or System.get_env("BINANCE_SECRET_KEY") == "" do
       {:error, "You have to set BINANCE_API_KEY and BINANCE_SECRET_KEY"}
@@ -13,7 +16,10 @@ defmodule Pex.Exchange.Binance do
   end
 
   @impl Exchange
-  def coin_list() do
+  @doc """
+  See behavior doc
+  """
+  def coins_list() do
     {:ok, %{balances: balances}} = Binance.get_account()
 
     balances

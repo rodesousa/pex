@@ -1,0 +1,72 @@
+# Kucoin
+
+## Deps
+
+```elixir
+Mix.install([
+  {:ex_kucoin, "~> 0.0.4", github: "rodesousa/ex_kucoin"}
+])
+```
+
+```elixir
+config = %ExKucoin.Config{
+  api_key: System.get_env("KUCOIN_API_KEY"),
+  api_secret: System.get_env("KUCOIN_API_SECRET"),
+  api_passphrase: System.get_env("KUCOIN_API_PASSPHRASE")
+}
+
+":)"
+```
+
+## Coin list
+
+```elixir
+defmodule Help do
+  def convert(string) do
+    {value, _} = Float.parse(string)
+    value
+  end
+
+  @doc """
+  I use this because sometimes elixir return some values as exp, for example 8.4e-4. (0.00084)
+  I prefer see 0.0 than a exp value when the value is < 1
+  """
+  def printable(string) do
+    float = convert(string)
+    if float < 1.0, do: 0.0, else: float
+  end
+end
+
+{:ok, %{"data" => data}} = ExKucoin.User.Account.all(%{}, config)
+
+Enum.filter(
+  data,
+  fn coin ->
+    Help.convert(coin["available"]) > 1.0 or Help.convert(coin["holds"]) > 1.0
+  end
+)
+|> Enum.map(fn coin ->
+  %{
+    locked: Help.printable(coin["holds"]),
+    symbol: coin["currency"],
+    free: Help.printable(coin["available"])
+  }
+end)
+```
+
+## Open orders
+
+```elixir
+{:ok, %{"data" => %{"items" => items}}} = ExKucoin.StopOrder.Order.list()
+
+items
+|> Enum.map(
+  &%{
+    symbol: &1["symbol"],
+    stopPrice: &1["stopPrice"],
+    size: &1["size"],
+    type: &1["type"],
+    price: &1["price"]
+  }
+)
+```

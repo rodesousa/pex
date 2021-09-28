@@ -1,0 +1,90 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# Trading tools
+
+## Risk Management
+
+```elixir
+defmodule RiskManagement do
+  def position_size(total, risk, distance) do
+    total * (risk / 100) / (distance / 100)
+  end
+
+  def computes_risk(total, risk, distance, coin_price, future) do
+    position_size = position_size(total, risk, distance) / future
+    coin = Float.ceil(position_size / coin_price, 2)
+    price = Float.ceil(coin * coin_price, 2)
+
+    %{
+      coin: coin * future,
+      price: price,
+      position_size: position_size
+    }
+  end
+end
+```
+
+```output
+{:module, RiskManagement, <<70, 79, 82, 49, 0, 0, 8, ...>>, {:computes_risk, 5}}
+```
+
+<!-- livebook:{"livebook_object":"cell_input","name":"total","reactive":true,"type":"number","value":"801"} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"risk","reactive":true,"type":"number","value":"1"} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"distance","reactive":true,"type":"text","value":"13"} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"coin_price","type":"number","value":"139.4"} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"future","type":"number","value":"1"} -->
+
+```elixir
+{total, _} = IO.gets("total") |> Float.parse()
+{risk, _} = IO.gets("risk") |> Float.parse()
+{distance, _} = IO.gets("distance") |> Float.parse()
+{coin_price, _} = IO.gets("coin_price") |> Float.parse()
+{future, _} = IO.gets("future") |> Float.parse()
+
+risk = RiskManagement.computes_risk(total, risk, distance, coin_price, future)
+
+"#{risk.coin} coin pour un total de #{risk.price} $$$ (position_size: #{risk.position_size})"
+```
+
+```output
+"0.45 coin pour un total de 62.74 $$$ (position_size: 61.61538461538461)"
+```
+
+### Test
+
+```elixir
+ExUnit.start(autorun: false)
+
+defmodule RiskMangementTest do
+  use ExUnit.Case, async: true
+  alias RiskManagement, as: RM
+
+  test "computes sucessfully position size" do
+    assert RM.position_size(50_000, 3, 5.0) == 30000
+  end
+
+  test "checks price is <= than risk" do
+    risk = RM.computes_risk(50_000, 3, 5, 6, 1)
+    assert 50000 * 0.03 == risk.price * 0.05
+  end
+end
+
+ExUnit.run()
+```
+
+```output
+..
+
+Finished in 0.00 seconds (0.00s async, 0.00s sync)
+2 tests, 0 failures
+
+Randomized with seed 392415
+```
+
+```output
+%{excluded: 0, failures: 0, skipped: 0, total: 2}
+```
