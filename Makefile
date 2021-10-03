@@ -8,6 +8,9 @@ CMD += postgres
 db:
 	${CMD}
 
+db_start:
+	@docker start pex_db
+
 db_rm:
 	@docker rm -f pex_db
 

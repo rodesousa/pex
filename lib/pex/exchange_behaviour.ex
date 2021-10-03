@@ -1,10 +1,10 @@
-defmodule Pex.TradeBehavior do
+defmodule Pex.ExchangeBehavior do
   alias Pex.Trade.Order
 
   @doc """
-  Returns actif order in db
+  Returns coins list
   """
-  @callback orders() :: [%Order{}]
+  @callback coins_list() :: [%Order{}]
 
   @doc """
   Returns [%Order{}] if there are exchange orders that are not exist in db
