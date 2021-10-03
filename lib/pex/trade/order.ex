@@ -4,8 +4,6 @@ defmodule Pex.Trade.Order do
 
   schema "orders" do
     field(:symbol, :string)
-    # normal or shad
-    field(:type, :string)
     field(:quantity, :float)
     field(:price, :float)
     field(:take_profit, :float)
