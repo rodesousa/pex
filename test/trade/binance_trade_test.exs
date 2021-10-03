@@ -1,19 +1,11 @@
 defmodule Pex.BinanceTradeTest do
   use ExUnit.Case
-  doctest Pex.BinanceTrade
   alias Pex.BinanceTrade
 
-  test "create_trade" do
+  test "get_price/1" do
     Pex.BinanceExchange.creds()
+    price = BinanceTrade.get_price("BTCUSDT") |> String.to_float()
 
-    result =
-      BinanceTrade.create_trade(%{
-        stop_loss_order_id: "770534325",
-        take_profit_order_id: "770534326",
-        price: 10,
-        symbol: "CHZUSDT"
-      })
-
-    assert {:ok, _a} = result
+    assert is_float(price)
   end
 end

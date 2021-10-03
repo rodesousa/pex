@@ -4,6 +4,7 @@ config :pex, Pex.Repo,
   database: "pex_repo_test",
   username: "user",
   password: "dev",
-  hostname: "localhost"
+  hostname: "localhost",
+  pool: Ecto.Adapters.SQL.Sandbox
 
 config :pex, ecto_repos: [Pex.Repo]

@@ -8,43 +8,22 @@ defmodule Pex.Orders do
 
   ## Examples
 
-      iex> Pex.Trade.list_orders()
-      [%Pex.Trade.Order{}]
-
-      iex> Pex.Trade.list_orders()
+      iex> list_orders()
       []
   """
   def list_orders do
     Repo.all(Order)
   end
 
-  # @doc ~S"""
-  # Gets one order
-
-  ### Examples
-
-  # iex> Pex.Trade.get_order("11")
-  # %Pex.Trade.Order{}
-
-  # iex> Pex.Trade.get_order("12")
-  # nil
-
-  # """
-  # def get_order(order_id) do
-  # Order
-  # |> where([o], o.exchange_order_id == ^order_id)
-  # |> Repo.one()
-  # end
-
   @doc ~S"""
   Creates an order
 
   ## Examples
       
-      iex> Pex.Trade.create_order(order)
+      iex> create_order(%{symbol: "BTCUSDT", quantity: "1", side: "BUY", platform: "binance"})
       {:ok, %Order{}}
 
-      iex> Pex.Trade.create_order(order)
+      iex> create_order(%{})
       {:error, %Ecto.Changeset{}}
 
   """
@@ -59,8 +38,8 @@ defmodule Pex.Orders do
 
   ## Examples
 
-      iex> Pex.Trade.delete_orders()
-      {1, nil}
+      iex> delete_orders()
+      {0, nil}
 
   """
   def delete_orders() do
@@ -72,7 +51,7 @@ defmodule Pex.Orders do
 
   ## Examples
 
-      iex> Pex.Orders.delete_order(1)
+      iex> delete_order(1)
       {:ok, %Pex.Trade.Order{}}
 
   """
@@ -86,8 +65,8 @@ defmodule Pex.Orders do
 
   ## Examples
 
-      iex> update_order("1", %{tp_order_id: 1})
-      {:ok, %Order{}}
+      iex> Pex.Orders.update_order("1", %{tp_order_id: 1})
+      {:ok, %Pex.Trade.Order{}}
   """
   def update_order(order_id, params) do
     Order

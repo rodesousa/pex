@@ -29,7 +29,6 @@ defmodule Pex.Trade.Order do
              :price,
              :take_profit_order_id,
              :stop_loss_order_id,
-             :type,
              :take_profit,
              :stop_loss
            ]
