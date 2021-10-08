@@ -1,21 +1,30 @@
 # Kucoin
 
-## Deps
+## Creds
 
 ```elixir
-Mix.install([
-  {:ex_kucoin, "~> 0.0.4", github: "rodesousa/ex_kucoin"}
-])
+Pex.KucoinExchange.creds()
 ```
 
+## Buy market
+
+<!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":""} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"quantity","type":"number","value":"804"} -->
+
 ```elixir
-config = %ExKucoin.Config{
-  api_key: System.get_env("KUCOIN_API_KEY"),
-  api_secret: System.get_env("KUCOIN_API_SECRET"),
-  api_passphrase: System.get_env("KUCOIN_API_PASSPHRASE")
+symbol = IO.gets("symbol") |> String.trim("\n")
+{quantity, _a} = IO.gets("quantity") |> Float.parse()
+
+params = %{
+  "clientOid" => UUID.uuid1(),
+  "side" => "buy",
+  "symbol" => symbol,
+  "type" => "market",
+  "size" => quantity
 }
 
-":)"
+ExKucoin.Trade.Order.create(params)
 ```
 
 ## Coin list

@@ -38,4 +38,19 @@ defmodule Pex.Tool.RiskManagement do
       position_size: position
     }
   end
+
+  @doc false
+  def computes_decrease(price, distance), do: price - price * (distance / 100)
+
+  @doc """
+  Computes limit from stop
+  """
+  @spec computes_limit_from_stop(float()) :: {:ok, float()} | {:error, String.t()}
+  def computes_limit_from_stop(limit) do
+    cond do
+      limit < 1000 -> {:ok, limit - limit * 0.005}
+      limit < 10000 -> {:ok, limit - 1}
+      true -> {:error, "#{limit} is not supported"}
+    end
+  end
 end

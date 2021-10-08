@@ -28,13 +28,13 @@ end
 {:module, RiskManagement, <<70, 79, 82, 49, 0, 0, 8, ...>>, {:computes_risk, 5}}
 ```
 
-<!-- livebook:{"livebook_object":"cell_input","name":"total","reactive":true,"type":"number","value":"1600"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"total","reactive":true,"type":"number","value":"1500"} -->
 
 <!-- livebook:{"livebook_object":"cell_input","name":"risk","reactive":true,"type":"number","value":"1"} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"distance","reactive":true,"type":"text","value":"21"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"distance","reactive":true,"type":"text","value":"34.51"} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"coin_price","type":"number","value":"3.816"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"coin_price","type":"number","value":"0.054"} -->
 
 <!-- livebook:{"livebook_object":"cell_input","name":"future","type":"number","value":"1"} -->
 
@@ -51,7 +51,7 @@ risk = RiskManagement.computes_risk(total, risk, distance, coin_price, future)
 ```
 
 ```output
-"19.97 coin pour un total de 76.21 $$$ (position_size: 76.19047619047619)"
+"804.92 coin pour un total de 43.47 $$$ (position_size: 43.46566212691974)"
 ```
 
 ### Test

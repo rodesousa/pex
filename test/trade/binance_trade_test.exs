@@ -8,4 +8,7 @@ defmodule Pex.BinanceTradeTest do
 
     assert is_float(price)
   end
+
+  test "place a market buy order" do
+  end
 end

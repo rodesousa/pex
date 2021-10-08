@@ -1,16 +1,25 @@
 defmodule Pex.BinanceTrade do
-  @behaviour Pex.ExchangeBehavior
-
-  alias Pex.ExchangeBehavior
-  alias Pex.BinanceExchange
   alias Pex.Orders
+  alias Pex.Tool.RiskManagement, as: RM
+  alias Pex.Exchange
 
-  @impl ExchangeBehavior
-  @doc """
-  See behavior doc
-  """
   def coins_list() do
-    BinanceExchange.coins_list()
+    {:ok, %{balances: balances}} = Binance.get_account()
+
+    balances
+    |> Enum.filter(&(convert(&1["free"]) > 0.0001 or convert(&1["locked"]) > 0.0001))
+    |> Enum.map(
+      &%Exchange{
+        symbol: &1["asset"],
+        free: convert(&1["free"]) |> Float.ceil(4),
+        locked: convert(&1["locked"]) |> Float.ceil(4)
+      }
+    )
+  end
+
+  defp convert(string) do
+    {value, _} = Float.parse(string)
+    value
   end
 
   @doc """
@@ -23,7 +32,7 @@ defmodule Pex.BinanceTrade do
         acc
 
       coin, acc ->
-        case coin.free > 0.0 do
+        case coin.free > 0.0001 do
           true -> [coin.symbol | acc]
           false -> acc
         end
@@ -122,7 +131,6 @@ defmodule Pex.BinanceTrade do
           take_profit_order_id: take_profit_order_id,
           side: take_profit.side,
           price: price,
-          type: "shad",
           platform: "binance"
         })
     end
@@ -165,34 +173,33 @@ defmodule Pex.BinanceTrade do
     price
   end
 
-  @impl ExchangeBehavior
   @doc """
-  See behavior doc
+  Places a order market buy
   """
-  def synchronize_orders() do
-    # {:ok, orders} = Binance.get_open_orders()
+  def buy_market(symbol, quantity, distance, tp) do
+    {:ok, _coin} = Binance.order_market_buy(symbol, quantity)
+    price = get_price(symbol)
+    stop = RM.computes_decrease(price, distance)
+    limit = RM.computes_limit_from_stop(stop)
 
-    # Enum.each(orders, fn order ->
-    # order.order_id
-    # |> Integer.to_string()
-    # |> Trade.get_order()
-    # |> create_order(order)
-    # end)
+    with true <- compare(:price, price > stop),
+         true <- compare(:stop_limit, stop > limit),
+         true <- compare(:tp, tp > price) do
+      Binance.create_oco_order(symbol, "SELL", quantity, tp, stop, limit)
+
+      create_trade(%{
+        price: price,
+        symbol: symbol,
+        stop_loss_order_id: nil,
+        take_profit_order_id: nil
+      })
+    else
+      :price -> {:error, "price < stop"}
+      :stop_limit -> {:error, "stop < limit"}
+      :tp -> {:error, "tp < price"}
+    end
   end
 
-  # defp create_order(nil, order) do
-  # Trade.create_order(%{
-  # quantity: order.orig_qty,
-  # symbol: order.symbol,
-  # price: order.price,
-  # exchange_order_id: Integer.to_string(order.order_id),
-  # side: order.side,
-  # state: "open",
-  # platform: "binance"
-  # })
-
-  # :ok
-  # end
-
-  # defp create_order(_a, _order), do: :ok
+  defp compare(_atom, true), do: true
+  defp compare(atom, false), do: atom
 end

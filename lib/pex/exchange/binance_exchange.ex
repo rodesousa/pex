@@ -14,33 +14,4 @@ defmodule Pex.BinanceExchange do
       Binance.Config.set(:secret_key, System.get_env("BINANCE_SECRET_KEY"))
     end
   end
-
-  @impl Exchange
-  @doc """
-  See behavior doc
-  """
-  def coins_list() do
-    {:ok, %{balances: balances}} = Binance.get_account()
-
-    balances
-    |> Enum.filter(&(convert(&1["free"]) > 1.0 or convert(&1["locked"]) > 1.0))
-    |> Enum.map(
-      &%Exchange{
-        symbol: &1["asset"],
-        free: print(&1["free"]),
-        locked: print(&1["locked"])
-      }
-    )
-  end
-
-  defp convert(string) do
-    {value, _} = Float.parse(string)
-    value
-  end
-
-  defp print(string) do
-    float = convert(string)
-    # I prefer to see 0.0 when there is less of 1.0
-    if float < 1.0, do: 0.0, else: float
-  end
 end

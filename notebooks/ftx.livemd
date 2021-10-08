@@ -1,15 +1,14 @@
 # FTX
 
-## Deps
+## Buy Market
+
+<!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":""} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"quantity","type":"number","value":""} -->
 
 ```elixir
-Mix.install([
-  {:ex_ftx, "~> 0.0.13"}
-])
+symbol = IO.gets("symbol") |> String.trim("\n")
+{quantity, _a} = IO.gets("quantity") |> Float.parse()
+
+Pex.FtxTrade.buy_market(symbol, quantity)
 ```
-
-```elixir
-
-```
-
-## Coin list
