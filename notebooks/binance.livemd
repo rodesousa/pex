@@ -3,7 +3,7 @@
 ## Creds
 
 ```elixir
-Pex.BinanceExchange.creds()
+Pex.BinanceTrade.creds()
 ```
 
 ## Gets binance coins list
@@ -16,6 +16,12 @@ Pex.BinanceTrade.coins_list()
 
 ```elixir
 Pex.BinanceTrade.coins_list_without_exchange_order()
+```
+
+## Gets coins without local order
+
+```elixir
+Pex.BinanceTrade.coins_list_without_local_order()
 ```
 
 ## Gets local coins list
@@ -51,30 +57,20 @@ Pex.Orders.list_orders()
   %{
     id: order.id,
     coin: order.symbol,
-    sl: order.stop_loss,
-    tp: order.take_profit,
-    price: current_price,
-    percent: Float.ceil(percent, 2),
-    bought: order.price
+    PERCENT: Float.ceil(percent, 2)
   }
 end)
-```
-
-## Gets coins without local order
-
-```elixir
-Pex.BinanceTrade.coins_list_without_local_order()
 ```
 
 ## Creates local order
 
 <!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":""} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"stop_loss_order_id","type":"text","value":"203724138"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"stop_loss_order_id","type":"text","value":""} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"take_profit_order_id","type":"text","value":"203724139"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"take_profit_order_id","type":"text","value":""} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"price","type":"number","value":"3.825"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"price","type":"number","value":"0.1729"} -->
 
 ```elixir
 symbol = IO.gets("symbol") |> String.trim("\n")
@@ -92,11 +88,11 @@ Pex.BinanceTrade.create_trade(%{
 
 ## Creates shad local order
 
-<!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":"SPARTABNB"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":""} -->
 
 <!-- livebook:{"livebook_object":"cell_input","name":"take_profit_order_id","type":"text","value":""} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"price","type":"number","value":"0.2305"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"price","type":"number","value":""} -->
 
 ```elixir
 symbol = IO.gets("symbol") |> String.trim("\n")
@@ -112,9 +108,9 @@ Pex.BinanceTrade.create_shad(%{
 
 ## Gets old trades
 
-<!-- livebook:{"livebook_object":"cell_input","name":"limit","type":"number","value":"3"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"limit","type":"number","value":""} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":"NAVBTC"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":""} -->
 
 ```elixir
 symbol = IO.gets("symbol") |> String.trim("\n")
@@ -162,7 +158,7 @@ Binance.cancel_all_orders(symbol, 1000)
 
 ## Get order by symbol
 
-<!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":"HARDUSDT"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":""} -->
 
 ```elixir
 symbol = IO.gets("symbol") |> String.trim("\n")
@@ -202,9 +198,9 @@ Pex.Trade.update_order(order_id, %{purchase_id: purchase_id})
 
 <!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":""} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"quantity","type":"number","value":"20"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"quantity","type":"number","value":""} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"price","type":"number","value":"3.825"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"price","type":"number","value":""} -->
 
 ```elixir
 symbol = IO.gets("symbol") |> String.trim("\n")
@@ -219,7 +215,7 @@ Binance.order_limit_buy(symbol, quantity, price)
 
 <!-- livebook:{"livebook_object":"cell_input","name":"quantity","type":"number","value":""} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"price","type":"number","value":"0.2297"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"price","type":"number","value":""} -->
 
 ```elixir
 {quantity, _} = IO.gets("quantity") |> Float.parse()
@@ -268,7 +264,7 @@ Binance.create_order(
 
 ## Sell stop limit
 
-<!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":"AVAXUSDT"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":""} -->
 
 <!-- livebook:{"livebook_object":"cell_input","name":"quantity","type":"text","value":""} -->
 
@@ -289,15 +285,15 @@ Binance.create_order(symbol, "SELL", "STOP_LOSS_LIMIT", quantity, price, "GTC", 
 
 <!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":""} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"quantity","type":"number","value":"20"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"quantity","type":"number","value":""} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"price","type":"number","value":"5.969"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"price","type":"number","value":""} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"stop","type":"number","value":"3"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"stop","type":"number","value":""} -->
 
 <!-- livebook:{"livebook_object":"cell_input","name":"limit","type":"number","value":""} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"bought","type":"number","value":"1.786"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"bought","type":"number","value":""} -->
 
 ```elixir
 {quantity, _} = IO.gets("quantity") |> Float.parse()
@@ -309,7 +305,26 @@ symbol = IO.gets("symbol") |> String.trim("\n")
 Binance.create_oco_order(symbol, "SELL", quantity, price, stop, limit)
 ```
 
-## Buy Market
+## Buy Market (+ oco)
+
+<!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":""} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"quantity","type":"number","value":""} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"distance","type":"number","value":""} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"tp","type":"number","value":""} -->
+
+```elixir
+{quantity, _} = IO.gets("quantity") |> Float.parse()
+{tp, _} = IO.gets("tp") |> Float.parse()
+{distance, _} = IO.gets("distance") |> Float.parse()
+symbol = IO.gets("symbol") |> String.trim("\n")
+
+Pex.BinanceTrade.buy_market(symbol, quantity, tp, distance)
+```
+
+## Buy Market (+ shad)
 
 <!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":""} -->
 
@@ -319,7 +334,7 @@ Binance.create_oco_order(symbol, "SELL", quantity, price, stop, limit)
 {quantity, _} = IO.gets("quantity") |> Float.parse()
 symbol = IO.gets("symbol") |> String.trim("\n")
 
-Pex.BinanceTrade.buy_market(symbol, quantity)
+Pex.BinanceTrade.buy_market(symbol, quantity, nil, nil)
 ```
 
 ## Sell Market

@@ -32,9 +32,9 @@ end
 
 <!-- livebook:{"livebook_object":"cell_input","name":"risk","reactive":true,"type":"number","value":"1"} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"distance","reactive":true,"type":"text","value":"34.51"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"distance","reactive":true,"type":"text","value":"15.6"} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"coin_price","type":"number","value":"0.054"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"coin_price","type":"number","value":"0.78"} -->
 
 <!-- livebook:{"livebook_object":"cell_input","name":"future","type":"number","value":"1"} -->
 
@@ -51,7 +51,7 @@ risk = RiskManagement.computes_risk(total, risk, distance, coin_price, future)
 ```
 
 ```output
-"804.92 coin pour un total de 43.47 $$$ (position_size: 43.46566212691974)"
+"123.28 coin pour un total de 96.16 $$$ (position_size: 96.15384615384616)"
 ```
 
 ### Test

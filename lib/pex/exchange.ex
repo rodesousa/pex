@@ -3,16 +3,6 @@ defmodule Pex.Exchange do
   Behaviour for each exchanges
   """
 
-  alias Pex.Exchange
-
-  defstruct [:symbol, :free, :locked]
-
-  @type t :: %Exchange{
-          symbol: String.t(),
-          free: float(),
-          locked: float()
-        }
-
   @doc """
   Set exchange credentials
   """

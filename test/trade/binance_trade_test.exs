@@ -1,14 +1,118 @@
 defmodule Pex.BinanceTradeTest do
-  use ExUnit.Case
-  alias Pex.BinanceTrade
+  use Pex.RepoCase
+  alias Pex.BinanceTrade, as: BT
+  alias Pex.Data.Trade
 
-  test "get_price/1" do
-    Pex.BinanceExchange.creds()
-    price = BinanceTrade.get_price("BTCUSDT") |> String.to_float()
-
-    assert is_float(price)
+  test "coins_list/0" do
+    assert [
+             %{symbol: _s, free: _f, locked: _l} = _ex,
+             _tail
+           ] = BT.coins_list()
   end
 
-  test "place a market buy order" do
+  test "coins_list_without_exchange_order" do
+    assert BT.coins_list_without_exchange_order() == ["BNB"]
+  end
+
+  test "coins_list_without_local_order/0" do
+    assert %{"AIONUSDT" => list} = BT.coins_list_without_local_order()
+    assert is_list(list)
+
+    assert [
+             %{
+               order_id: _a,
+               price: _b,
+               quantity: _c,
+               symbol: _d
+             } = a,
+             _list
+           ] = list
+  end
+
+  test "create_trade/1 with valid data" do
+    param = %{
+      symbol: "AION",
+      stop_loss_order_id: "122658018",
+      take_profit_order_id: "122658019",
+      price: 1.0
+    }
+
+    assert {:ok, %Trade{} = trade} = BT.create_trade(param)
+
+    assert trade.price == param.price
+    assert trade.stop_loss_order_id == param.stop_loss_order_id
+    assert trade.take_profit_order_id == param.take_profit_order_id
+    assert trade.symbol == param.symbol
+    assert trade.quantity == 348.00000000
+    assert trade.side == "SELL"
+  end
+
+  test "create_trade/1 with invalid data" do
+    param = %{
+      symbol: "SUSHIUSDT",
+      stop_loss_order_id: "122658018",
+      take_profit_order_id: "122658019",
+      price: 1.0
+    }
+
+    assert {:error, "quantities are not the same"} = BT.create_trade(param)
+  end
+
+  test "create_shad/1 with valid data" do
+    param = %{
+      symbol: "AIONUSDT",
+      take_profit_order_id: "122658019",
+      price: 1.0
+    }
+
+    assert {:ok, %Trade{} = trade} = BT.create_shad(param)
+    assert trade.price == param.price
+    assert trade.stop_loss_order_id == nil
+    assert trade.take_profit_order_id == param.take_profit_order_id
+    assert trade.symbol == param.symbol
+    assert trade.quantity == 348.00000000
+    assert trade.side == "SELL"
+  end
+
+  test "create_shad/1 with invalid data" do
+    param = %{
+      symbol: "AIONUSDT",
+      take_profit_order_id: "122658022",
+      price: 1.0
+    }
+
+    assert {:error, "take_profit_order_id not found"} = BT.create_shad(param)
+  end
+
+  test "buy_market/4 with valid data" do
+    assert {:ok, %Trade{} = trade} = BT.buy_market("CRVUSDT", 171, 300.44, 10.0)
+
+    assert trade.take_profit > trade.stop_loss
+    assert trade.take_profit == 3.44000000
+    assert trade.stop_loss == 2.79000000
+    assert trade.symbol == "CRVUSDT"
+    assert trade.quantity == 171.0
+    assert trade.side == "SELL"
+    assert trade.platform == "binance"
+    assert trade.stop_loss_order_id == "383059912"
+    assert trade.take_profit_order_id == "383059913"
+  end
+
+  test "buy_market/4 with invalid data" do
+    assert {:error, "tp < price"} = BT.buy_market("CRVUSDT", 171, 0, 10.0)
+    assert {:error, "price < stop"} = BT.buy_market("CRVUSDT", 171, 300, 0.0)
+  end
+
+  test "buy_market/4 with shad strategy" do
+    assert {:ok, %Trade{} = trade} = BT.buy_market("CRVUSDT", 171, 300.44, nil)
+
+    assert trade.symbol == "CRVUSDT"
+    assert trade.quantity == 50.0
+    assert trade.side == "SELL"
+    assert trade.platform == "binance"
+    assert trade.take_profit_order_id == "33820595"
+    assert trade.take_profit == 4.0
+    assert is_nil(trade.stop_loss)
+    assert is_nil(trade.stop_loss_order_id)
   end
 end

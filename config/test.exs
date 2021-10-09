@@ -8,3 +8,5 @@ config :pex, Pex.Repo,
   pool: Ecto.Adapters.SQL.Sandbox
 
 config :pex, ecto_repos: [Pex.Repo]
+
+config :pex, :binance_api, Pex.MockBinanceAPI

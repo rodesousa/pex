@@ -1,8 +1,8 @@
-defmodule Pex.Trade.Order do
+defmodule Pex.Data.Trade do
   use Ecto.Schema
   import Ecto.Changeset
 
-  schema "orders" do
+  schema "trades" do
     field(:symbol, :string)
     field(:quantity, :float)
     field(:price, :float)
