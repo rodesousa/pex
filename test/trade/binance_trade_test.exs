@@ -115,4 +115,20 @@ defmodule Pex.BinanceTradeTest do
     assert is_nil(trade.stop_loss)
     assert is_nil(trade.stop_loss_order_id)
   end
+
+  test "determine_oco_orders/1" do
+    assert BT.determine_oco_orders([%{"price" => 1}, %{"price" => 2}]) == %{
+             tp: %{"price" => 2},
+             stop: %{"price" => 1}
+           }
+  end
+
+  test "coin_capitalization/1" do
+    assert BT.coin_capitalization("SOL") == 40.0
+    assert BT.coin_capitalization("SPARTA") == 80.0
+  end
+
+  test "balance/0" do
+    assert BT.get_balance() == 1395.45
+  end
 end

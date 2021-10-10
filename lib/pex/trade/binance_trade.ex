@@ -19,24 +19,40 @@ defmodule Pex.BinanceTrade do
   end
 
   @doc """
+  Returns account balance total in USDT
+  """
+  def get_balance() do
+    {:ok, %{balances: balances}} = @api.get_account()
+
+    capitalization = fn
+      0.0, _symbol -> 0.0
+      value, symbol -> coin_capitalization(symbol) * value
+    end
+
+    balances
+    |> Enum.reduce(0, fn
+      %{"asset" => asset, "free" => free, "locked" => locked}, acc ->
+        capitalization.(String.to_float(free) + String.to_float(locked), asset) + acc
+    end)
+    |> Float.ceil(2)
+  end
+
+  @doc """
   List of coins in our portfolio
   """
   @spec coins_list() :: [map]
   def coins_list() do
     {:ok, %{balances: balances}} = @api.get_account()
 
-    convert = fn value ->
-      {value, _} = Float.parse(value)
-      value
-    end
-
     balances
-    |> Enum.filter(&(convert.(&1["free"]) > 0.0001 or convert.(&1["locked"]) > 0.0001))
+    |> Enum.filter(
+      &(String.to_float(&1["free"]) > 0.0001 or String.to_float(&1["locked"]) > 0.0001)
+    )
     |> Enum.map(
       &%{
         symbol: &1["asset"],
-        free: convert.(&1["free"]) |> Float.ceil(4),
-        locked: convert.(&1["locked"]) |> Float.ceil(4)
+        free: String.to_float(&1["free"]) |> Float.ceil(4),
+        locked: String.to_float(&1["locked"]) |> Float.ceil(4)
       }
     )
   end
@@ -63,7 +79,17 @@ defmodule Pex.BinanceTrade do
     end)
   end
 
-  defp coin_capitalization(symbol) do
+  @doc """
+  Returns the coin capitalisation on USDT
+
+  # Examples
+
+      iex> coin_capitalization("SOL")
+      1.0
+  """
+  def coin_capitalization("USDT"), do: 1
+
+  def coin_capitalization(symbol) do
     with {:ok, %{price: price}} <- @api.get_price(symbol <> "USDT") do
       String.to_float(price)
     else
@@ -287,25 +313,38 @@ defmodule Pex.BinanceTrade do
     with true <- compare.(:price, price > stop),
          true <- compare.(:stop, stop > limit),
          true <- compare.(:tp, tp > price) do
-      {:ok, %{"orderReports" => [order1, order2]}} =
+      {:ok, %{"orderReports" => order_reports}} =
         @api.create_oco_order(symbol, "SELL", quantity, tp, stop, limit)
 
-      orders =
-        case order1["price"] > order2["price"] do
-          true -> %{tp: order1, stop: order2}
-          false -> %{tp: order2, stop: order1}
-        end
-
-      create_trade(%{
-        price: price,
-        symbol: symbol,
-        stop_loss_order_id: "#{orders.stop["orderId"]}",
-        take_profit_order_id: "#{orders.tp["orderId"]}"
-      })
+      create_trade_from_oco(symbol, price, order_reports)
     else
       :price -> {:error, "price < stop"}
       :stop -> {:error, "stop < limit"}
       :tp -> {:error, "tp < price"}
+    end
+  end
+
+  @doc """
+  Creates a trade if oco has been made outside of livebook
+  """
+  def create_trade_from_oco(symbol, price_bought, order_reports) do
+    orders = determine_oco_orders(order_reports)
+
+    create_trade(%{
+      price: price_bought,
+      symbol: symbol,
+      stop_loss_order_id: "#{orders.stop["orderId"]}",
+      take_profit_order_id: "#{orders.tp["orderId"]}"
+    })
+  end
+
+  @doc """
+  Get take_profit order and stop_loss order from oco response
+  """
+  def determine_oco_orders([order1, order2]) do
+    case order1["price"] > order2["price"] do
+      true -> %{tp: order1, stop: order2}
+      false -> %{tp: order2, stop: order1}
     end
   end
 end

@@ -2,6 +2,8 @@ defmodule Pex.MockBinanceAPI do
   @behaviour Pex.BinanceAPIBehaviour
 
   @impl Pex.BinanceAPIBehaviour
+  def get_price("SPARTAUSDT"), do: %{"code" => -1121, "msg" => "Invalid symbol."}
+  def get_price("SPARTABTC"), do: {:ok, %{price: "2.0"}}
   def get_price(_symbol), do: {:ok, %{price: "40.0"}}
 
   @impl Pex.BinanceAPIBehaviour
@@ -9,7 +11,7 @@ defmodule Pex.MockBinanceAPI do
     {:ok,
      %Binance.Account{
        balances: [
-         %{"asset" => "BTC", "free" => "0.00000000", "locked" => "0.00000000"},
+         %{"asset" => "BTC", "free" => "1.00000000", "locked" => "0.00000000"},
          %{"asset" => "LTC", "free" => "0.00000000", "locked" => "0.00000000"},
          %{"asset" => "ETH", "free" => "0.00000000", "locked" => "0.00000000"},
          %{"asset" => "NEO", "free" => "0.00000000", "locked" => "0.00000000"},

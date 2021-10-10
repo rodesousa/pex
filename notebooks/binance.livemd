@@ -27,11 +27,12 @@ Pex.BinanceTrade.coins_list_without_local_order()
 ## Gets local coins list
 
 ```elixir
-Pex.Orders.list_orders()
+Pex.Data.list_trades()
 |> Enum.filter(&(&1.stop_loss != nil))
 |> Enum.map(fn order ->
-  current_price = Pex.BinanceTrade.get_price(order.symbol) |> String.to_float()
-  percent = Pex.Trade.percent_order(order, current_price)
+  {:ok, %{price: price}} = Pex.BinanceAPI.get_price(order.symbol)
+  current_price = String.to_float(price)
+  # percent = Pex.Trade.percent_order(order, current_price)
 
   %{
     id: order.id,
@@ -39,7 +40,7 @@ Pex.Orders.list_orders()
     sl: order.stop_loss,
     tp: order.take_profit,
     price: current_price,
-    PERCENT: Float.ceil(percent, 2),
+    # PERCENT: Float.ceil(percent, 2),
     bought: order.price
   }
 end)
@@ -66,11 +67,11 @@ end)
 
 <!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":""} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"stop_loss_order_id","type":"text","value":""} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"stop_loss_order_id","type":"text","value":"233385367"} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"take_profit_order_id","type":"text","value":""} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"take_profit_order_id","type":"text","value":"233385368"} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"price","type":"number","value":"0.1729"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"price","type":"number","value":"0.073"} -->
 
 ```elixir
 symbol = IO.gets("symbol") |> String.trim("\n")
@@ -179,10 +180,6 @@ price = IO.gets("price")
 Pex.Trade.create_purchase(%{symbol: symbol, price: price})
 ```
 
-```elixir
-
-```
-
 <!-- livebook:{"livebook_object":"cell_input","name":"order_id","type":"text","value":""} -->
 
 <!-- livebook:{"livebook_object":"cell_input","name":"purchase_id","type":"text","value":""} -->
@@ -281,13 +278,13 @@ symbol = IO.gets("symbol") |> String.trim("\n")
 Binance.create_order(symbol, "SELL", "STOP_LOSS_LIMIT", quantity, price, "GTC", nil, stop)
 ```
 
-## Sell oco
+## Sell oco (+ trade)
 
 <!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":""} -->
 
 <!-- livebook:{"livebook_object":"cell_input","name":"quantity","type":"number","value":""} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"price","type":"number","value":""} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"tp","type":"number","value":""} -->
 
 <!-- livebook:{"livebook_object":"cell_input","name":"stop","type":"number","value":""} -->
 
@@ -298,22 +295,26 @@ Binance.create_order(symbol, "SELL", "STOP_LOSS_LIMIT", quantity, price, "GTC", 
 ```elixir
 {quantity, _} = IO.gets("quantity") |> Float.parse()
 {stop, _} = IO.gets("stop") |> Float.parse()
-{price, _} = IO.gets("price") |> Float.parse()
+{tp, _} = IO.gets("tp") |> Float.parse()
 {limit, _} = IO.gets("limit") |> Float.parse()
 symbol = IO.gets("symbol") |> String.trim("\n")
+{bought, _} = IO.gets("bought") |> Float.parse()
 
-Binance.create_oco_order(symbol, "SELL", quantity, price, stop, limit)
+{:ok, %{"orderReports" => order_reports}} =
+  Binance.create_oco_order(symbol, "SELL", quantity, tp, stop, limit)
+
+Pex.BinanceTrade.create_trade_from_oco(symbol, bought, order_reports)
 ```
 
 ## Buy Market (+ oco)
 
 <!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":""} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"quantity","type":"number","value":""} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"quantity","type":"number","value":"67"} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"distance","type":"number","value":""} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"distance","type":"number","value":"10"} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"tp","type":"number","value":""} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"tp","type":"number","value":"2.83"} -->
 
 ```elixir
 {quantity, _} = IO.gets("quantity") |> Float.parse()
