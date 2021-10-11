@@ -29,9 +29,9 @@ defmodule PexTest.Tool.RiskManagement do
 
   test "computes_limit_from_stop/1 for < 1" do
     assert RM.computes_limit_from_stop(0.1) == 0.0995
-    assert RM.computes_limit_from_stop(0.01) == 0.00995
-    assert RM.computes_limit_from_stop(0.001) == 0.000995
-    assert RM.computes_limit_from_stop(0.0001) == 0.000099
+    assert RM.computes_limit_from_stop(0.01) == 0.0099
+    assert RM.computes_limit_from_stop(0.001) == 0.0009
+    assert RM.computes_limit_from_stop(0.0001) == 0.00009
     assert RM.computes_limit_from_stop(0.001145) == 0.001139
   end
 end

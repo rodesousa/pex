@@ -18,6 +18,7 @@ defmodule Pex.BinanceTrade do
     end
   end
 
+  @impl Pex.Exchange
   @doc """
   Returns account balance total in USDT
   """
@@ -40,7 +41,7 @@ defmodule Pex.BinanceTrade do
   @doc """
   List of coins in our portfolio
   """
-  @spec coins_list() :: [map]
+  @impl Pex.Exchange
   def coins_list() do
     {:ok, %{balances: balances}} = @api.get_account()
 
@@ -65,6 +66,7 @@ defmodule Pex.BinanceTrade do
       iex> coins_list_without_exchange_order
       ["BNB"]
   """
+  @impl Pex.Exchange
   def coins_list_without_exchange_order() do
     coins_list()
     |> Enum.reduce([], fn
@@ -103,7 +105,8 @@ defmodule Pex.BinanceTrade do
   @doc """
   Gets coins list without local order
   """
-  def coins_list_without_local_order do
+  @impl Pex.Exchange
+  def coins_list_without_trade do
     local_orders = Data.list_trades()
 
     {:ok, binance_orders} = @api.get_open_orders()
@@ -158,6 +161,7 @@ defmodule Pex.BinanceTrade do
         })
       {:ok, %Trade{}}
   """
+  @impl Pex.Exchange
   def create_trade(%{
         stop_loss_order_id: stop_loss_order_id,
         take_profit_order_id: take_profit_order_id,
@@ -189,7 +193,7 @@ defmodule Pex.BinanceTrade do
   end
 
   @doc """
-  Creates a shad trade
+  Creates a trade with shad strategy
 
   # Examples
 
@@ -201,6 +205,7 @@ defmodule Pex.BinanceTrade do
         })
       {:ok, %Trade{}}
   """
+  @impl Pex.Exchange
   def create_shad(%{
         take_profit_order_id: take_profit_order_id,
         price: price,
@@ -250,6 +255,7 @@ defmodule Pex.BinanceTrade do
   @doc """
   Places a order market buy
   """
+  @impl Pex.Exchange
   def buy_market(symbol, quantity, tp, distance) do
     {:ok, %{price: price}} = @api.get_price(symbol)
     price = String.to_float(price)

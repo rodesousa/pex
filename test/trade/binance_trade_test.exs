@@ -12,8 +12,8 @@ defmodule Pex.BinanceTradeTest do
     assert BT.coins_list_without_exchange_order() == ["BNB", "BTC"]
   end
 
-  test "coins_list_without_local_order/0" do
-    assert %{"AIONUSDT" => list} = BT.coins_list_without_local_order()
+  test "coins_list_without_trade/0" do
+    assert %{"AIONUSDT" => list} = BT.coins_list_without_trade()
     assert is_list(list)
 
     assert [

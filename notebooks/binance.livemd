@@ -18,10 +18,10 @@ Pex.BinanceTrade.coins_list()
 Pex.BinanceTrade.coins_list_without_exchange_order()
 ```
 
-## Gets coins without local order
+## Gets coins without trade
 
 ```elixir
-Pex.BinanceTrade.coins_list_without_local_order()
+Pex.BinanceTrade.coins_list_without_local_trade()
 ```
 
 ## Gets local coins list

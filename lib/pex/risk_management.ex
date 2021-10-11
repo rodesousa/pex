@@ -66,6 +66,7 @@ defmodule Pex.RiskManagement do
 
     cond do
       float >= 1.0 -> 2
+      float == 0.0001 -> 5
       length > 4 -> min(length, 8)
       true -> 4
     end
