@@ -4,14 +4,12 @@ defmodule Pex.BinanceTradeTest do
   alias Pex.Data.Trade
 
   test "coins_list/0" do
-    assert [
-             %{symbol: _s, free: _f, locked: _l} = _ex,
-             _tail
-           ] = BT.coins_list()
+    coin = BT.coins_list() |> List.first()
+    assert %{symbol: _s, free: _f, locked: _l} = coin
   end
 
   test "coins_list_without_exchange_order" do
-    assert BT.coins_list_without_exchange_order() == ["BNB"]
+    assert BT.coins_list_without_exchange_order() == ["BNB", "BTC"]
   end
 
   test "coins_list_without_local_order/0" do

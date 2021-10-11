@@ -32,18 +32,19 @@ Pex.Data.list_trades()
 |> Enum.map(fn order ->
   {:ok, %{price: price}} = Pex.BinanceAPI.get_price(order.symbol)
   current_price = String.to_float(price)
-  # percent = Pex.Trade.percent_order(order, current_price)
+  percent = Pex.Stat.percent_order(order, current_price)
 
   %{
     id: order.id,
     coin: order.symbol,
-    sl: order.stop_loss,
-    tp: order.take_profit,
-    price: current_price,
-    # PERCENT: Float.ceil(percent, 2),
-    bought: order.price
+    # sl: order.stop_loss,
+    # tp: order.take_profit,
+    # price: current_price,
+    percent: Float.ceil(percent, 2)
+    # bought: order.price
   }
 end)
+|> Enum.sort(&(&1.percent > &2.percent))
 ```
 
 ## Gets local coins list in shad
@@ -67,11 +68,11 @@ end)
 
 <!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":""} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"stop_loss_order_id","type":"text","value":"233385367"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"stop_loss_order_id","type":"text","value":""} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"take_profit_order_id","type":"text","value":"233385368"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"take_profit_order_id","type":"text","value":""} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"price","type":"number","value":"0.073"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"price","type":"number","value":""} -->
 
 ```elixir
 symbol = IO.gets("symbol") |> String.trim("\n")
@@ -288,20 +289,20 @@ Binance.create_order(symbol, "SELL", "STOP_LOSS_LIMIT", quantity, price, "GTC", 
 
 <!-- livebook:{"livebook_object":"cell_input","name":"stop","type":"number","value":""} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"limit","type":"number","value":""} -->
-
 <!-- livebook:{"livebook_object":"cell_input","name":"bought","type":"number","value":""} -->
 
 ```elixir
 {quantity, _} = IO.gets("quantity") |> Float.parse()
 {stop, _} = IO.gets("stop") |> Float.parse()
 {tp, _} = IO.gets("tp") |> Float.parse()
-{limit, _} = IO.gets("limit") |> Float.parse()
+limit = Pex.RiskManagement.computes_limit_from_stop(stop)
 symbol = IO.gets("symbol") |> String.trim("\n")
 {bought, _} = IO.gets("bought") |> Float.parse()
 
+IO.inspect(limit)
+
 {:ok, %{"orderReports" => order_reports}} =
-  Binance.create_oco_order(symbol, "SELL", quantity, tp, stop, limit)
+  Binance.create_oco_order(symbol, "SELL", quantity, tp, stop, 0.6557)
 
 Pex.BinanceTrade.create_trade_from_oco(symbol, bought, order_reports)
 ```
@@ -310,11 +311,11 @@ Pex.BinanceTrade.create_trade_from_oco(symbol, bought, order_reports)
 
 <!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":""} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"quantity","type":"number","value":"67"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"quantity","type":"number","value":""} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"distance","type":"number","value":"10"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"distance","type":"number","value":""} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"tp","type":"number","value":"2.83"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"tp","type":"number","value":""} -->
 
 ```elixir
 {quantity, _} = IO.gets("quantity") |> Float.parse()

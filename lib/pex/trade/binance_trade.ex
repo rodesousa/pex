@@ -1,7 +1,7 @@
 defmodule Pex.BinanceTrade do
   @behaviour Pex.Exchange
   alias Pex.Data
-  alias Pex.Tool.RiskManagement, as: RM
+  alias Pex.RiskManagement, as: RM
 
   @api Application.get_env(:pex, :binance_api)
 
@@ -275,8 +275,8 @@ defmodule Pex.BinanceTrade do
   defp strategy_for_buy_market(price, distance)
        when is_float(price)
        when is_float(distance) do
-    stop = RM.computes_decrease(price, distance)
-    {:ok, limit} = RM.computes_limit_from_stop(stop)
+    stop = RM.computes_stop_loss(price, distance)
+    limit = RM.computes_limit_from_stop(stop)
     %{stop: stop, limit: limit}
   end
 
