@@ -57,16 +57,17 @@ defmodule Pex.RiskManagement do
       else: limit
   end
 
-  defp decimal_size(float) do
+  defp decimal_size(price) do
     length =
-      (float - Float.floor(float))
+      (price - Float.floor(price))
       |> Float.to_string()
       |> String.length()
       |> (&(&1 - 2)).()
 
     cond do
-      float >= 1.0 -> 2
-      float == 0.0001 -> 5
+      price >= 200 -> 1
+      price >= 1.0 -> 2
+      price == 0.0001 -> 5
       length > 4 -> min(length, 8)
       true -> 4
     end

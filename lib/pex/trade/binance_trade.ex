@@ -2,6 +2,7 @@ defmodule Pex.BinanceTrade do
   @behaviour Pex.Exchange
   alias Pex.Data
   alias Pex.RiskManagement, as: RM
+  alias Pex.Trade
 
   @api Application.get_env(:pex, :binance_api)
 
@@ -27,7 +28,7 @@ defmodule Pex.BinanceTrade do
 
     capitalization = fn
       0.0, _symbol -> 0.0
-      value, symbol -> coin_capitalization(symbol) * value
+      value, symbol -> Trade.coin_capitalization(@api, symbol) * value
     end
 
     balances
@@ -40,6 +41,11 @@ defmodule Pex.BinanceTrade do
 
   @doc """
   List of coins in our portfolio
+
+  # Examples
+
+      iex> coins_list()
+      [%{symbol: "SOL", free: 0.0, locked: 1.0}, ...}
   """
   @impl Pex.Exchange
   def coins_list() do
@@ -74,7 +80,7 @@ defmodule Pex.BinanceTrade do
         acc
 
       coin, acc ->
-        case coin_capitalization(coin.symbol) * coin.free > 0.001 do
+        case Trade.coin_capitalization(@api, coin.symbol) * coin.free > 0.001 do
           true -> [coin.symbol | acc]
           false -> acc
         end
@@ -82,39 +88,17 @@ defmodule Pex.BinanceTrade do
   end
 
   @doc """
-  Returns the coin capitalisation on USDT
-
-  # Examples
-
-      iex> coin_capitalization("SOL")
-      1.0
-  """
-  def coin_capitalization("USDT"), do: 1
-
-  def coin_capitalization(symbol) do
-    with {:ok, %{price: price}} <- @api.get_price(symbol <> "USDT") do
-      String.to_float(price)
-    else
-      _ ->
-        {:ok, %{price: btc_price}} = @api.get_price(symbol <> "BTC")
-        {:ok, %{price: usdt_price}} = @api.get_price("BTCUSDT")
-        String.to_float(usdt_price) * String.to_float(btc_price)
-    end
-  end
-
-  @doc """
   Gets coins list without local order
   """
   @impl Pex.Exchange
   def coins_list_without_trade do
-    local_orders = Data.list_trades()
-
+    trades = Data.list_trades() |> Enum.filter(&(&1.platform == "binance"))
     {:ok, binance_orders} = @api.get_open_orders()
 
     binance_orders
     |> Enum.reduce([], fn
       %{symbol: "USDT"}, acc -> acc
-      coin, acc -> create_list_without_order(acc, local_orders, coin)
+      coin, acc -> create_list_without_order(acc, trades, coin)
     end)
     |> Enum.group_by(&(&1.quantity && &1.symbol))
   end
@@ -256,12 +240,12 @@ defmodule Pex.BinanceTrade do
   Places a order market buy
   """
   @impl Pex.Exchange
-  def buy_market(symbol, quantity, tp, distance) do
+  def buy_market(symbol, quantity, tp, stop) do
     {:ok, %{price: price}} = @api.get_price(symbol)
     price = String.to_float(price)
 
     {:ok, _coin} = @api.order_market_buy(symbol, quantity)
-    strategy = strategy_for_buy_market(price, distance)
+    strategy = strategy_for_buy_market(price, stop)
 
     params =
       %{
@@ -278,10 +262,9 @@ defmodule Pex.BinanceTrade do
   defp strategy_for_buy_market(price, nil) when is_float(price),
     do: %{tp: price * 2, stop: nil, limit: nil}
 
-  defp strategy_for_buy_market(price, distance)
+  defp strategy_for_buy_market(price, stop)
        when is_float(price)
-       when is_float(distance) do
-    stop = RM.computes_stop_loss(price, distance)
+       when is_float(stop) do
     limit = RM.computes_limit_from_stop(stop)
     %{stop: stop, limit: limit}
   end

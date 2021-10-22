@@ -18,10 +18,10 @@ Pex.BinanceTrade.coins_list()
 Pex.BinanceTrade.coins_list_without_exchange_order()
 ```
 
-## Gets coins without trade
+## Gets coins without local order
 
 ```elixir
-Pex.BinanceTrade.coins_list_without_local_trade()
+Pex.BinanceTrade.coins_list_without_local_order()
 ```
 
 ## Gets local coins list
@@ -37,8 +37,8 @@ Pex.Data.list_trades()
   %{
     id: order.id,
     coin: order.symbol,
-    # sl: order.stop_loss,
-    # tp: order.take_profit,
+    sl: order.stop_loss,
+    tp: order.take_profit,
     # price: current_price,
     percent: Float.ceil(percent, 2)
     # bought: order.price
@@ -110,9 +110,9 @@ Pex.BinanceTrade.create_shad(%{
 
 ## Gets old trades
 
-<!-- livebook:{"livebook_object":"cell_input","name":"limit","type":"number","value":""} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"limit","type":"number","value":"2"} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":""} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":"CRVUSDT"} -->
 
 ```elixir
 symbol = IO.gets("symbol") |> String.trim("\n")
@@ -142,12 +142,12 @@ Binance.cancel_order(symbol, 5000, order_id)
 
 ## Cancel local order
 
-<!-- livebook:{"livebook_object":"cell_input","name":"order_id","type":"number","value":""} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"order_id","type":"number","value":"28"} -->
 
 ```elixir
 {id, _} = IO.gets("order_id") |> Integer.parse()
 
-Pex.Orders.delete_order(id)
+Pex.Data.delete_trade(id)
 ```
 
 <!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":""} -->
@@ -192,130 +192,46 @@ purchase_id = IO.gets("purchase_id") |> String.trim("\n")
 Pex.Trade.update_order(order_id, %{purchase_id: purchase_id})
 ```
 
-## Buy Limit
+## Buy Market
 
 <!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":""} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"quantity","type":"number","value":""} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"tp","type":"number","value":"472.0"} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"price","type":"number","value":""} -->
-
-```elixir
-symbol = IO.gets("symbol") |> String.trim("\n")
-{quantity, _} = IO.gets("quantity") |> Float.parse()
-{price, _} = IO.gets("price") |> Float.parse()
-Binance.order_limit_buy(symbol, quantity, price)
-```
-
-## Sell limit
-
-<!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":""} -->
-
-<!-- livebook:{"livebook_object":"cell_input","name":"quantity","type":"number","value":""} -->
-
-<!-- livebook:{"livebook_object":"cell_input","name":"price","type":"number","value":""} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"distance","type":"number","value":"23.5"} -->
 
 ```elixir
-{quantity, _} = IO.gets("quantity") |> Float.parse()
-{price, _} = IO.gets("price") |> Float.parse()
-symbol = IO.gets("symbol") |> String.trim("\n")
-
-{:ok, order} = Binance.create_order(symbol, "SELL", "LIMIT", quantity, price, "GTC")
-
-%{
-  take_profit_order_id: order["orderId"],
-  price: price,
-  symbol: symbol
-}
-|> Pex.BinanceTrade.create_shad()
-```
-
-## Buy Stop Limit
-
-<!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":""} -->
-
-<!-- livebook:{"livebook_object":"cell_input","name":"quantity","type":"number","value":""} -->
-
-<!-- livebook:{"livebook_object":"cell_input","name":"stop","type":"number","value":""} -->
-
-<!-- livebook:{"livebook_object":"cell_input","name":"price","type":"number","value":""} -->
-
-```elixir
-{quantity, _} = IO.gets("quantity") |> Float.parse()
-{stop, _} = IO.gets("stop") |> Float.parse()
-{price, _} = IO.gets("price") |> Float.parse()
-symbol = IO.gets("symbol") |> String.trim("\n")
-
-Binance.create_order(
-  symbol,
-  "BUY",
-  "STOP_LOSS_LIMIT",
-  quantity,
-  price,
-  "GTC",
-  nil,
-  stop,
-  nil,
-  1000
-)
-```
-
-## Sell stop limit
-
-<!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":""} -->
-
-<!-- livebook:{"livebook_object":"cell_input","name":"quantity","type":"text","value":""} -->
-
-<!-- livebook:{"livebook_object":"cell_input","name":"stop","type":"number","value":""} -->
-
-<!-- livebook:{"livebook_object":"cell_input","name":"price","type":"number","value":""} -->
-
-```elixir
-{quantity, _} = IO.gets("quantity") |> Float.parse()
-{stop, _} = IO.gets("stop") |> Float.parse()
-{price, _} = IO.gets("price") |> Float.parse()
-symbol = IO.gets("symbol") |> String.trim("\n")
-
-Binance.create_order(symbol, "SELL", "STOP_LOSS_LIMIT", quantity, price, "GTC", nil, stop)
-```
-
-## Sell oco (+ trade)
-
-<!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":""} -->
-
-<!-- livebook:{"livebook_object":"cell_input","name":"quantity","type":"number","value":""} -->
-
-<!-- livebook:{"livebook_object":"cell_input","name":"tp","type":"number","value":""} -->
-
-<!-- livebook:{"livebook_object":"cell_input","name":"stop","type":"number","value":""} -->
-
-<!-- livebook:{"livebook_object":"cell_input","name":"bought","type":"number","value":""} -->
-
-```elixir
-{quantity, _} = IO.gets("quantity") |> Float.parse()
-{stop, _} = IO.gets("stop") |> Float.parse()
 {tp, _} = IO.gets("tp") |> Float.parse()
-limit = Pex.RiskManagement.computes_limit_from_stop(stop)
+{distance, _} = IO.gets("distance") |> Float.parse()
 symbol = IO.gets("symbol") |> String.trim("\n")
-{bought, _} = IO.gets("bought") |> Float.parse()
+{:ok, %{price: price}} = Binance.get_price(symbol)
+price = String.to_float(price)
+balance = Pex.BinanceTrade.get_balance()
 
-IO.inspect(limit)
+params = %{
+  balance: balance,
+  risk: 1.0,
+  distance: distance,
+  coin_price: price,
+  future: 1
+}
 
-{:ok, %{"orderReports" => order_reports}} =
-  Binance.create_oco_order(symbol, "SELL", quantity, tp, stop, 0.6557)
+risk = Pex.RiskManagement.computes_risk(params)
 
-Pex.BinanceTrade.create_trade_from_oco(symbol, bought, order_reports)
+# "#{risk.quantity} #{symbol} pour un total de #{risk.cost} $ avec un stop loss à #{risk.stop_loss} (prix: #{price})"
+
+Pex.BinanceTrade.buy_market(symbol, risk.quantity, tp, risk.stop_loss)
 ```
 
-## Buy Market (+ oco)
+## Buy Market with quantity
 
 <!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":""} -->
 
 <!-- livebook:{"livebook_object":"cell_input","name":"quantity","type":"number","value":""} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"distance","type":"number","value":""} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"distance","type":"number","value":"10"} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"tp","type":"number","value":""} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"tp","type":"number","value":"73946.07"} -->
 
 ```elixir
 {quantity, _} = IO.gets("quantity") |> Float.parse()
@@ -326,7 +242,7 @@ symbol = IO.gets("symbol") |> String.trim("\n")
 Pex.BinanceTrade.buy_market(symbol, quantity, tp, distance)
 ```
 
-## Buy Market (+ shad)
+## Buy Market shad
 
 <!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":""} -->
 
@@ -350,4 +266,34 @@ Pex.BinanceTrade.buy_market(symbol, quantity, nil, nil)
 symbol = IO.gets("symbol") |> String.trim("\n")
 
 {:ok, coin} = Binance.order_market_sell(symbol, quantity)
+```
+
+## Section that should not be used
+
+Normally with all that's above, I shouldn't need what's below
+
+## Sell oco (+ trade)
+
+<!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":""} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"quantity","type":"number","value":"0.44"} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"tp","type":"number","value":"472.7"} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"stop","type":"number","value":"249.6"} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"bought","type":"number","value":"321.0"} -->
+
+```elixir
+{quantity, _} = IO.gets("quantity") |> Float.parse()
+{stop, _} = IO.gets("stop") |> Float.parse()
+{tp, _} = IO.gets("tp") |> Float.parse()
+limit = Pex.RiskManagement.computes_limit_from_stop(stop)
+symbol = IO.gets("symbol") |> String.trim("\n")
+{bought, _} = IO.gets("bought") |> Float.parse()
+
+{:ok, %{"orderReports" => order_reports}} =
+  Binance.create_oco_order(symbol, "SELL", quantity, tp, stop, limit)
+
+Pex.BinanceTrade.create_trade_from_oco(symbol, bought, order_reports)
 ```

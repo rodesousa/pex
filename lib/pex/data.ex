@@ -34,28 +34,28 @@ defmodule Pex.Data do
   end
 
   @doc ~S"""
-  Deletes all orders
+  Deletes all trades
 
   ## Examples
 
-      iex> delete_orders()
+      iex> delete_trades()
       {0, nil}
 
   """
-  def delete_orders() do
+  def delete_trades() do
     Repo.delete_all(Trade)
   end
 
   @doc """
-  Deletes a order
+  Deletes a trade
 
   ## Examples
 
-      iex> delete_order(1)
-      {:ok, %Pex.Trade.Order{}}
+      iex> delete_trade(1)
+      {:ok, %Trade{}}
 
   """
-  def delete_order(id) do
+  def delete_trade(id) do
     Repo.get(Trade, id)
     |> Repo.delete()
   end

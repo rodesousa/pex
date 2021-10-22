@@ -27,8 +27,8 @@ defmodule Pex.MixProject do
       {:ecto_sql, "~> 3.4"},
       {:postgrex, ">= 0.0.0"},
       {:binance, github: "rodesousa/binance.ex", branch: "master"},
-      {:ex_ftx, "~> 0.0.14"},
-      {:ex_kucoin, "~> 0.0.4", github: "rodesousa/ex_kucoin"},
+      {:ex_ftx, github: "rodesousa/ex_ftx", branch: "main"},
+      {:ex_kucoin, github: "rodesousa/ex_kucoin", branch: "master"},
       {:elixir_uuid, "~> 1.2"}
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
