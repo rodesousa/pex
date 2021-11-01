@@ -37,4 +37,22 @@ defmodule Pex.Exchange do
   Places a order market buy
   """
   @callback market_buy(String.t(), float, float, float) :: [map]
+
+  @doc """
+  Loads exchange info from fixture/filename
+  """
+  @spec load_exchange_from_file!(String.t()) :: map()
+  def load_exchange_from_file!(filename) do
+    File.read!("fixture/#{filename}")
+    |> Jason.decode!()
+  end
+
+  @doc """
+  Writes in fixture/filename all necessary info (data) to buy on a exchange
+  """
+  @spec save_exchange_to_file!(String.t(), map) :: :ok
+  def save_exchange_to_file!(filename, data) do
+    data = Jason.encode!(data)
+    File.write!("fixture/#{filename}", data)
+  end
 end
