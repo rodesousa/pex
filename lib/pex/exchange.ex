@@ -4,11 +4,6 @@ defmodule Pex.Exchange do
   """
 
   @doc """
-  Set exchange credentials
-  """
-  @callback creds() :: :ok | {:error, String.t()}
-
-  @doc """
   Returns account balance
   """
   @callback get_balance() :: float
@@ -41,5 +36,5 @@ defmodule Pex.Exchange do
   @doc """
   Places a order market buy
   """
-  @callback buy_market(String.t(), float, float, float) :: [map]
+  @callback market_buy(String.t(), float, float, float) :: [map]
 end

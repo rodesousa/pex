@@ -6,7 +6,6 @@ defmodule Pex.BinanceTrade do
 
   @api Application.get_env(:pex, :binance_api)
 
-  @impl Pex.Exchange
   @doc """
   Sets binance creds
   """
@@ -26,17 +25,36 @@ defmodule Pex.BinanceTrade do
   def get_balance() do
     {:ok, %{balances: balances}} = @api.get_account()
 
-    capitalization = fn
+    price = fn
       0.0, _symbol -> 0.0
-      value, symbol -> Trade.coin_capitalization(@api, symbol) * value
+      value, symbol -> coin_price(@api, symbol) * value
     end
 
     balances
     |> Enum.reduce(0, fn
       %{"asset" => asset, "free" => free, "locked" => locked}, acc ->
-        capitalization.(String.to_float(free) + String.to_float(locked), asset) + acc
+        price.(String.to_float(free) + String.to_float(locked), asset) + acc
     end)
     |> Float.ceil(2)
+  end
+
+  @doc """
+  # Examples
+
+      iex> coin_price(api, "SOL")
+      1.0
+  """
+  def coin_price(_api, "USDT"), do: 1
+
+  def coin_price(api, symbol) do
+    with {:ok, %{price: price}} <- api.get_price(symbol <> "USDT") do
+      String.to_float(price)
+    else
+      _ ->
+        {:ok, %{price: btc_price}} = api.get_price(symbol <> "BTC")
+        {:ok, %{price: usdt_price}} = api.get_price("BTCUSDT")
+        String.to_float(usdt_price) * String.to_float(btc_price)
+    end
   end
 
   @doc """
@@ -80,7 +98,7 @@ defmodule Pex.BinanceTrade do
         acc
 
       coin, acc ->
-        case Trade.coin_capitalization(@api, coin.symbol) * coin.free > 0.001 do
+        case Trade.coin_price_usdt(@api, coin.symbol) * coin.free > 0.001 do
           true -> [coin.symbol | acc]
           false -> acc
         end
@@ -214,33 +232,11 @@ defmodule Pex.BinanceTrade do
     end
   end
 
-  # def add_stop_loss(symbol, stop_loss_order_id, order_id) do
-  #  {:ok, orders} = @api.get_open_orders(symbol)
-  #  binance_order = Enum.find(orders, &(&1.order_id == stop_loss_order_id))
-
-  #  order_id
-  #  |> Create.update_order(%{
-  #    stop_loss_order_id: stop_loss_order_id,
-  #    stop_loss: binance_order.price
-  #  })
-  # end
-
-  # def add_take_profit(symbol, take_profit_order_id, order_id) do
-  # {:ok, orders} = @api.get_open_orders(symbol)
-  # binance_order = Enum.find(orders, &(&1.order_id == take_profit_order_id))
-
-  # order_id
-  # |> Orders.update_order(%{
-  # take_profit_order_id: take_profit_order_id,
-  # take_profit: binance_order.price
-  # })
-  # end
-
   @doc """
   Places a order market buy
   """
   @impl Pex.Exchange
-  def buy_market(symbol, quantity, tp, stop) do
+  def market_buy(symbol, quantity, tp, stop) do
     {:ok, %{price: price}} = @api.get_price(symbol)
     price = String.to_float(price)
 

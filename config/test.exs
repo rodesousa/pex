@@ -10,3 +10,5 @@ config :pex, Pex.Repo,
 config :pex, ecto_repos: [Pex.Repo]
 
 config :pex, :binance_api, Pex.MockBinanceAPI
+config :pex, :ftx_api, Pex.MockFtxAPI
+config :pex, :kucoin_api, Pex.MockKucoinAPI

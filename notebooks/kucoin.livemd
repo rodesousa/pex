@@ -1,81 +1,128 @@
 # Kucoin
 
-## Creds
+## Portfolio
 
 ```elixir
-Pex.KucoinExchange.creds()
+Pex.KucoinTrade.coins_list()
+```
+
+## Gets pairs without trade
+
+```elixir
+Pex.KucoinTrade.coins_list_without_trade()
+```
+
+## Gets trades
+
+```elixir
+Pex.Data.list_trades()
+|> Enum.filter(&(&1.stop_loss != nil and &1.platform == "kucoin"))
+|> Enum.map(fn order ->
+  {:ok, %{price: price}} = Pex.KucoinTrade.get_price(order.symbol)
+  current_price = String.to_float(price)
+  percent = Pex.Stat.percent_order(order, current_price)
+
+  %{
+    id: order.id,
+    coin: order.symbol,
+    sl: order.stop_loss,
+    tp: order.take_profit,
+    percent: Float.ceil(percent, 2),
+    bought: order.price
+  }
+end)
+|> Enum.sort(&(&1.coin > &2.coin))
+```
+
+## Gets shad trades
+
+```elixir
+Pex.Data.list_trades()
+|> Enum.filter(&(&1.stop_loss == nil and &1.platform == "kucoin"))
+|> Enum.map(fn order ->
+  {:ok, %{price: price}} = Pex.KucoinTrade.get_price(order.symbol)
+  current_price = String.to_float(price)
+  percent = Pex.Stat.percent_order(order, current_price)
+
+  %{
+    id: order.id,
+    coin: order.symbol,
+    sl: order.stop_loss,
+    tp: order.take_profit,
+    percent: Float.ceil(percent, 2),
+    bought: order.price
+  }
+end)
+|> Enum.sort(&(&1.coin > &2.coin))
+```
+
+## RiskManagement
+
+<!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":"GALAX"} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"distance","type":"number","value":"21"} -->
+
+```elixir
+{distance, _} = IO.gets("distance") |> Float.parse()
+symbol = IO.gets("symbol") |> String.trim("\n")
+
+price = Pex.KucoinTrade.coin_price_usdt(symbol)
+balance = Pex.KucoinTrade.get_balance()
+
+params = %{
+  balance: balance,
+  risk: 1.0,
+  distance: distance,
+  coin_price: price,
+  future: 1
+}
+
+risk = Pex.RiskManagement.computes_risk(params)
+
+"#{risk.quantity} #{symbol} pour un total de #{risk.cost} $ avec un stop loss à #{risk.stop_loss} (prix: #{price})"
 ```
 
 ## Buy market
 
 <!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":""} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"quantity","type":"number","value":"804"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"distance","type":"number","value":"9.5"} -->
+
+<!-- livebook:{"livebook_object":"cell_input","name":"take_profit","type":"text","value":"0.00439"} -->
+
+```elixir
+{take_profit, _} = IO.gets("take_profit") |> Float.parse()
+{distance, _} = IO.gets("distance") |> Float.parse()
+symbol = IO.gets("symbol") |> String.trim("\n")
+
+price = Pex.KucoinTrade.coin_price_usdt(symbol)
+balance = Pex.KucoinTrade.get_balance()
+
+params = %{
+  balance: balance,
+  risk: 1.0,
+  distance: distance,
+  coin_price: price,
+  future: 1
+}
+
+risk = Pex.RiskManagement.computes_risk(params)
+
+IO.inspect(
+  "#{risk.quantity} #{symbol} pour un total de #{risk.cost} $ avec un stop loss à #{risk.stop_loss} (prix: #{price})"
+)
+
+Pex.KucoinTrade.buy_market(symbol, 53055, take_profit, risk.stop_loss)
+```
+
+## Buy Market shad
+
+<!-- livebook:{"livebook_object":"cell_input","name":"symbol","type":"text","value":""} -->
 
 ```elixir
 symbol = IO.gets("symbol") |> String.trim("\n")
-{quantity, _a} = IO.gets("quantity") |> Float.parse()
 
-params = %{
-  "clientOid" => UUID.uuid1(),
-  "side" => "buy",
-  "symbol" => symbol,
-  "type" => "market",
-  "size" => quantity
-}
+balance = Pex.KucoinTrade.get_balance()
 
-ExKucoin.Trade.Order.create(params)
-```
-
-## Coin list
-
-```elixir
-defmodule Help do
-  def convert(string) do
-    {value, _} = Float.parse(string)
-    value
-  end
-
-  @doc """
-  I use this because sometimes elixir return some values as exp, for example 8.4e-4. (0.00084)
-  I prefer see 0.0 than a exp value when the value is < 1
-  """
-  def printable(string) do
-    float = convert(string)
-    if float < 1.0, do: 0.0, else: float
-  end
-end
-
-{:ok, %{"data" => data}} = ExKucoin.User.Account.all(%{}, config)
-
-Enum.filter(
-  data,
-  fn coin ->
-    Help.convert(coin["available"]) > 1.0 or Help.convert(coin["holds"]) > 1.0
-  end
-)
-|> Enum.map(fn coin ->
-  %{
-    locked: Help.printable(coin["holds"]),
-    symbol: coin["currency"],
-    free: Help.printable(coin["available"])
-  }
-end)
-```
-
-## Open orders
-
-```elixir
-{:ok, %{"data" => %{"items" => items}}} = ExKucoin.StopOrder.Order.list()
-
-items
-|> Enum.map(
-  &%{
-    symbol: &1["symbol"],
-    stopPrice: &1["stopPrice"],
-    size: &1["size"],
-    type: &1["type"],
-    price: &1["price"]
-  }
-)
+Pex.KucoinTrade.buy_market(symbol, balance * 0.01, nil, nil)
 ```
