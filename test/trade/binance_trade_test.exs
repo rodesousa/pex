@@ -8,10 +8,6 @@ defmodule Pex.BinanceTradeTest do
     assert %{symbol: _s, free: _f, locked: _l} = coin
   end
 
-  test "coins_list_without_exchange_order" do
-    assert BT.coins_list_without_exchange_order() == ["BNB", "BTC"]
-  end
-
   test "coins_list_without_trade/0" do
     assert %{"AIONUSDT" => list} = BT.coins_list_without_trade()
     assert is_list(list)
@@ -27,7 +23,7 @@ defmodule Pex.BinanceTradeTest do
            ] = list
   end
 
-  test "create_trade/1 with valid data" do
+  test "save_trade/1 with valid data" do
     param = %{
       symbol: "AION",
       stop_loss_order_id: "122658018",
@@ -35,7 +31,7 @@ defmodule Pex.BinanceTradeTest do
       price: 1.0
     }
 
-    assert {:ok, %Trade{} = trade} = BT.create_trade(param)
+    assert {:ok, %Trade{} = trade} = BT.save_trade(param)
 
     assert trade.price == param.price
     assert trade.stop_loss_order_id == param.stop_loss_order_id
@@ -45,7 +41,7 @@ defmodule Pex.BinanceTradeTest do
     assert trade.side == "SELL"
   end
 
-  test "create_trade/1 with invalid data" do
+  test "save_trade/1 with invalid data" do
     param = %{
       symbol: "SUSHIUSDT",
       stop_loss_order_id: "122658018",
@@ -53,37 +49,37 @@ defmodule Pex.BinanceTradeTest do
       price: 1.0
     }
 
-    assert {:error, "quantities are not the same"} = BT.create_trade(param)
+    assert {:error, "quantities are not the same"} = BT.save_trade(param)
   end
 
-  test "create_shad/1 with valid data" do
-    param = %{
-      symbol: "AIONUSDT",
-      take_profit_order_id: "122658019",
-      price: 1.0
-    }
+  # test "create_shad/1 with valid data" do
+  # param = %{
+  # symbol: "AIONUSDT",
+  # take_profit_order_id: "122658019",
+  # price: 1.0
+  # }
 
-    assert {:ok, %Trade{} = trade} = BT.create_shad(param)
-    assert trade.price == param.price
-    assert trade.stop_loss_order_id == nil
-    assert trade.take_profit_order_id == param.take_profit_order_id
-    assert trade.symbol == param.symbol
-    assert trade.quantity == 348.00000000
-    assert trade.side == "SELL"
-  end
+  # assert {:ok, %Trade{} = trade} = BT.create_shad(param)
+  # assert trade.price == param.price
+  # assert trade.stop_loss_order_id == nil
+  # assert trade.take_profit_order_id == param.take_profit_order_id
+  # assert trade.symbol == param.symbol
+  # assert trade.quantity == 348.00000000
+  # assert trade.side == "SELL"
+  # end
 
-  test "create_shad/1 with invalid data" do
-    param = %{
-      symbol: "AIONUSDT",
-      take_profit_order_id: "122658022",
-      price: 1.0
-    }
+  # test "create_shad/1 with invalid data" do
+  # param = %{
+  # symbol: "AIONUSDT",
+  # take_profit_order_id: "122658022",
+  # price: 1.0
+  # }
 
-    assert {:error, "take_profit_order_id not found"} = BT.create_shad(param)
-  end
+  # assert {:error, "take_profit_order_id not found"} = BT.create_shad(param)
+  # end
 
-  test "buy_market/4 with valid data" do
-    assert {:ok, %Trade{} = trade} = BT.buy_market("CRVUSDT", 171, 300.44, 10.0)
+  test "trade_buy/4 with valid data" do
+    assert {:ok, %Trade{} = trade} = BT.trade_buy("CRV", "USDT", 300.44, 10.0)
 
     assert trade.take_profit > trade.stop_loss
     assert trade.take_profit == 3.44000000
@@ -96,37 +92,94 @@ defmodule Pex.BinanceTradeTest do
     assert trade.take_profit_order_id == "383059913"
   end
 
-  test "buy_market/4 with invalid data" do
-    assert {:error, "tp < price"} = BT.buy_market("CRVUSDT", 171, 0, 10.0)
-    assert {:error, "price < stop"} = BT.buy_market("CRVUSDT", 171, 300, 0.0)
+  test "trade_buy/4 with invalid data" do
+    assert_raise MatchError, fn -> BT.trade_buy("CRV", "SOL", 171, 10.0) end
   end
 
-  test "buy_market/4 with shad strategy" do
-    assert {:ok, %Trade{} = trade} = BT.buy_market("CRVUSDT", 171, 300.44, nil)
+  # test "trade_buy/4 with shad strategy" do
+  # assert {:ok, %Trade{} = trade} = BT.trade_buy("CRV", "USDT", 171, 300.44, nil)
 
-    assert trade.symbol == "CRVUSDT"
-    assert trade.quantity == 50.0
-    assert trade.side == "SELL"
-    assert trade.platform == "binance"
-    assert trade.take_profit_order_id == "33820595"
-    assert trade.take_profit == 4.0
-    assert is_nil(trade.stop_loss)
-    assert is_nil(trade.stop_loss_order_id)
-  end
+  # assert trade.symbol == "CRVUSDT"
+  # assert trade.quantity == 50.0
+  # assert trade.side == "SELL"
+  # assert trade.platform == "binance"
+  # assert trade.take_profit_order_id == "33820595"
+  # assert trade.take_profit == 4.0
+  # assert is_nil(trade.stop_loss)
+  # assert is_nil(trade.stop_loss_order_id)
+  # end
 
-  test "determine_oco_orders/1" do
-    assert BT.determine_oco_orders([%{"price" => 1}, %{"price" => 2}]) == %{
-             tp: %{"price" => 2},
-             stop: %{"price" => 1}
-           }
-  end
-
-  test "coin_capitalization/1" do
-    assert BT.coin_capitalization("SOL") == 40.0
-    assert BT.coin_capitalization("SPARTA") == 80.0
-  end
-
-  test "balance/0" do
+  test "get_balance/0" do
     assert BT.get_balance() == 1395.45
+  end
+
+  test "exchange_info_filter/1 with valid" do
+    assert BT.exchange_info_filter("SPARTABNB") ==
+             {:ok,
+              %{
+                price: %{
+                  "filterType" => "PRICE_FILTER",
+                  "maxPrice" => "1000.00000000",
+                  "minPrice" => "0.00000010",
+                  "tickSize" => "0.00000010"
+                },
+                quantity: %{
+                  "filterType" => "LOT_SIZE",
+                  "maxQty" => "9000000.00000000",
+                  "minQty" => "1.00000000",
+                  "stepSize" => "1.00000000"
+                }
+              }}
+  end
+
+  test "exchange_info_filter with invalid data" do
+    Pex.BinanceTrade.exchange_info_filter("DOTU")
+    {:error, "DOTU not found in exchange info"}
+  end
+
+  test "right_quantity? with valid data" do
+    {:ok, info} = Pex.BinanceTrade.exchange_info_filter("DOTUSDT")
+    assert BT.right_quantity?(10.0, info)
+  end
+
+  test "right_quantity? with invalid data" do
+    {:ok, info} = Pex.BinanceTrade.exchange_info_filter("DOTUSDT")
+    refute BT.right_quantity?(0.002, info)
+  end
+
+  test "trim_quantity/2" do
+    {:ok, info} = Pex.BinanceTrade.exchange_info_filter("DOTUSDT")
+    assert BT.trim_quantity(0.019, info) == 0.01
+  end
+
+  test "right_price? with valid data" do
+    {:ok, info} = Pex.BinanceTrade.exchange_info_filter("DOTUSDT")
+    assert BT.right_price?(10.0, info)
+  end
+
+  test "right_price? with invalid data" do
+    {:ok, info} = Pex.BinanceTrade.exchange_info_filter("DOTUSDT")
+    refute BT.right_price?(0.002, info)
+  end
+
+  test "trim_price/2" do
+    {:ok, info} = Pex.BinanceTrade.exchange_info_filter("DOTUSDT")
+    assert BT.trim_price(0.019, info) == 0.01
+  end
+
+  test "init_risk_management/2 with valid data" do
+    assert {:ok,
+            %Pex.RiskManagement{
+              cost: 139.55,
+              distance: 10.0,
+              limit: 35.892,
+              pair: "SPARTABNB",
+              quantity: 3.0,
+              stop_loss: 36.0
+            }} = BT.init_risk_management("SPARTA", "BNB", 10.0)
+  end
+
+  test "init_risk_management/2 with invalid data" do
+    assert_raise MatchError, fn -> BT.init_risk_management("SPARTA", "USDT", 10.0) end
   end
 end

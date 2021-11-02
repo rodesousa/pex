@@ -2,7 +2,7 @@ defmodule Pex.MockBinanceAPI do
   @behaviour Pex.BinanceAPIBehaviour
 
   @impl Pex.BinanceAPIBehaviour
-  def get_price("SPARTAUSDT"), do: %{"code" => -1121, "msg" => "Invalid symbol."}
+  def get_price("SPARTAUSDT"), do: {:error, %{"code" => -1121, "msg" => "Invalid symbol."}}
   def get_price("SPARTABTC"), do: {:ok, %{price: "2.0"}}
   def get_price(_symbol), do: {:ok, %{price: "40.0"}}
 

@@ -3,73 +3,53 @@ defmodule Pex.RiskManagement do
   Risk Management module
   """
 
-  @decrease_rate 0.005
+  defstruct [
+    :distance,
+    :stop_loss,
+    :quantity,
+    :cost,
+    :limit,
+    :position,
+    :pair,
+    :pair_price
+  ]
 
-  defp position_size(balance, risk, distance) do
-    balance * (risk / 100) / (distance / 100)
-  end
+  @type t :: %__MODULE__{
+          distance: float,
+          stop_loss: float,
+          quantity: float,
+          cost: float,
+          limit: float,
+          position: float,
+          pair: String.t(),
+          pair_price: String.t()
+        }
+
+  @risk 1
+  @decrease_rate 0.003
 
   @doc """
-  Returns position size and how many coins to buy 
+  Computes and returns a %RiskManagement{}
   """
-  @spec computes_risk(map) :: String.t()
+  @spec computes_risk(map) :: t
   def computes_risk(%{
         balance: balance,
-        risk: risk,
         distance: distance,
-        coin_price: coin_price,
-        future: future
+        coin_price: coin_price
       }) do
-    position =
-      position_size(balance, risk, distance) /
-        future
+    position = balance * (@risk / 100.0) / (distance / 100.0)
+    quantity = position / coin_price
+    cost = Float.ceil(quantity * coin_price, 2)
+    stop_loss = coin_price - coin_price * (distance / 100.0)
+    limit = stop_loss - stop_loss * @decrease_rate
 
-    coin = Float.ceil(position / coin_price, 2)
-    cost = Float.ceil(coin * coin_price, 2)
-
-    stop_loss = computes_stop_loss(coin_price, distance)
-
-    %{
-      quantity: coin * future,
+    %__MODULE__{
+      quantity: quantity,
       cost: cost,
-      position_size: position,
-      stop_loss: stop_loss
+      distance: distance,
+      stop_loss: stop_loss,
+      limit: limit,
+      position: position
     }
-  end
-
-  def computes_stop_loss(price, distance) do
-    stop_loss = Float.round(price - price * (distance / 100), decimal_size(price))
-
-    if stop_loss == 0.0,
-      do: Float.round(price - price * (distance / 100), decimal_size(price) + 1),
-      else: stop_loss
-  end
-
-  @doc """
-  Computes limit from stop
-  """
-  @spec computes_limit_from_stop(float()) :: {:ok, float()} | {:error, String.t()}
-  def computes_limit_from_stop(stop_loss) do
-    limit = Float.floor(stop_loss - stop_loss * @decrease_rate, decimal_size(stop_loss))
-
-    if limit == 0.0,
-      do: Float.round(stop_loss - stop_loss * @decrease_rate, decimal_size(stop_loss) + 1),
-      else: limit
-  end
-
-  defp decimal_size(price) do
-    length =
-      (price - Float.floor(price))
-      |> Float.to_string()
-      |> String.length()
-      |> (&(&1 - 2)).()
-
-    cond do
-      price >= 200 -> 1
-      price >= 1.0 -> 2
-      price == 0.0001 -> 5
-      length > 4 -> min(length, 8)
-      true -> 4
-    end
   end
 end

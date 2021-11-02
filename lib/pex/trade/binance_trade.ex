@@ -1,26 +1,30 @@
 defmodule Pex.BinanceTrade do
-  @behaviour Pex.Exchange
   alias Pex.Data
   alias Pex.RiskManagement, as: RM
-  alias Pex.Trade
 
   @api Application.get_env(:pex, :binance_api)
+  @exchange_info "binance_exchange_info.json"
 
   @doc """
-  Sets binance creds
+  Gets a binance exchange info for price filter and lot size
   """
-  def creds() do
-    if System.get_env("BINANCE_API_KEY") == "" or System.get_env("BINANCE_SECRET_KEY") == "" do
-      {:error, "You have to set BINANCE_API_KEY and BINANCE_SECRET_KEY"}
-    else
-      Binance.Config.set(:api_key, System.get_env("BINANCE_API_KEY"))
-      Binance.Config.set(:secret_key, System.get_env("BINANCE_SECRET_KEY"))
-    end
+  def load_exchange_info(), do: Pex.Exchange.load_exchange_from_file!(@exchange_info)
+
+  @doc """
+  Saves binance exchange info for price filter and lot size
+  """
+  def save_exchange_info() do
+    {:ok, %{symbols: data}} = Binance.get_exchange_info()
+    Pex.Exchange.save_exchange_to_file!(@exchange_info, data)
   end
 
-  @impl Pex.Exchange
   @doc """
   Returns account balance total in USDT
+
+  # Examples
+
+      iex> get_balance
+      1239.23
   """
   def get_balance() do
     {:ok, %{balances: balances}} = @api.get_account()
@@ -65,7 +69,6 @@ defmodule Pex.BinanceTrade do
       iex> coins_list()
       [%{symbol: "SOL", free: 0.0, locked: 1.0}, ...}
   """
-  @impl Pex.Exchange
   def coins_list() do
     {:ok, %{balances: balances}} = @api.get_account()
 
@@ -83,32 +86,8 @@ defmodule Pex.BinanceTrade do
   end
 
   @doc """
-  List of coins whitout exchange order
-
-  # Examples
-
-      iex> coins_list_without_exchange_order
-      ["BNB"]
-  """
-  @impl Pex.Exchange
-  def coins_list_without_exchange_order() do
-    coins_list()
-    |> Enum.reduce([], fn
-      %{symbol: "USDT"}, acc ->
-        acc
-
-      coin, acc ->
-        case Trade.coin_price_usdt(@api, coin.symbol) * coin.free > 0.001 do
-          true -> [coin.symbol | acc]
-          false -> acc
-        end
-    end)
-  end
-
-  @doc """
   Gets coins list without local order
   """
-  @impl Pex.Exchange
   def coins_list_without_trade do
     trades = Data.list_trades() |> Enum.filter(&(&1.platform == "binance"))
     {:ok, binance_orders} = @api.get_open_orders()
@@ -146,11 +125,259 @@ defmodule Pex.BinanceTrade do
     end)
   end
 
-  @doc """
-  Creates a trade
+  # @doc """
+  # Creates a trade with shad strategy
 
-  Get stop_loss_order_id and take_profit_order_id
-  Checks if the quantity is the same
+  ## Examples
+
+  # iex> create_shad(
+  # %{
+  # symbol: "AIONUSDT",
+  # take_profit_order_id: "122658019",
+  # price: 1.0
+  # })
+  # {:ok, %Trade{}}
+  # """
+  # def create_shad(%{
+  # take_profit_order_id: take_profit_order_id,
+  # price: price,
+  # symbol: symbol
+  # }) do
+  # {:ok, orders} = @api.get_open_orders(symbol)
+
+  # case Enum.find(orders, &(&1.order_id == String.to_integer(take_profit_order_id))) do
+  # nil ->
+  # {:error, "take_profit_order_id not found"}
+
+  # take_profit ->
+  # Data.create_trade(%{
+  # symbol: symbol,
+  # quantity: take_profit.orig_qty,
+  # take_profit: take_profit.price,
+  # take_profit_order_id: take_profit_order_id,
+  # side: take_profit.side,
+  # price: price,
+  # platform: "binance"
+  # })
+  # end
+  # end
+
+  @doc """
+  TODO
+  """
+  def trade_buy(pair, tp, distance \\ nil) do
+    with {:ok, risk} <-
+           init_risk_management(pair, distance),
+         {:buy, risk, {:ok, _coin}} <-
+           {:buy, risk, @api.order_market_buy(pair, risk.quantity)},
+         {:ok, %{"orderReports" => order_reports}} <-
+           oco_order(risk, tp),
+         {:ok, trade} <-
+           save_trade_from_oco(risk.pair, risk.pair_price, order_reports) do
+      {:ok, trade}
+    else
+      {:buy, risk, error} ->
+        IO.inspect("During the order maket buy: risk #{inspect(risk)}")
+        error
+
+      error ->
+        error
+    end
+  end
+
+  @doc """
+  Returns a %RiskManagement{} if exchange constraints (price filter, quantity filter) are respected
+
+  # Examples
+
+      iex> init_risk_management("SOL", "USDT", 10.0)
+      {:ok, %RiskManagement{...}}
+  """
+  @spec init_risk_management(String.t(), String.t(), float | nil) ::
+          {:ok, %RM{}} | {:error, String.t()}
+  def init_risk_management(_coin_1, _coin_2, nil) do
+    {:error, "shad not implemented"}
+  end
+
+  def init_risk_management(pair, distance) when is_float(distance) do
+    {:ok, %{price: price}} = @api.get_price(pair)
+    price = String.to_float(price)
+    balance = get_balance()
+
+    params = %{
+      balance: balance,
+      distance: distance,
+      coin_price: price,
+      future: 1
+    }
+
+    {:ok, exchange_info} = exchange_info_filter(pair)
+
+    case risk_constraints(Pex.RiskManagement.computes_risk(params), exchange_info) do
+      {:ok, risk} ->
+        {:ok,
+         %{
+           risk
+           | quantity: trim_quantity(risk.quantity, exchange_info),
+             stop_loss: trim_price(risk.stop_loss, exchange_info),
+             limit: trim_price(risk.limit, exchange_info),
+             pair: pair,
+             pair_price: price
+         }}
+
+      error ->
+        error
+    end
+  end
+
+  defp risk_constraints(
+         %RM{
+           quantity: quantity,
+           stop_loss: stop_loss,
+           limit: limit
+         } = risk,
+         exchange_info
+       ) do
+    with {_, true} <- {:quantity, right_quantity?(quantity, exchange_info)},
+         {_, true} <- {:limit, right_price?(limit, exchange_info)},
+         {_, true} <- {:stop_loss, right_price?(stop_loss, exchange_info)} do
+      {:ok, risk}
+    else
+      {atom, false} -> {:error, "#{atom} doest not respect the exchange info"}
+    end
+  end
+
+  @doc """
+  Gets the pair price & quantity filter from exchange info
+
+  # Examples
+
+      iex> exchange_info_filter("SPARTA", "BNB")
+      {:ok,
+        %{
+          price: %{
+            "filterType" => "PRICE_FILTER",
+            "maxPrice" => "1000.00000000",
+            "minPrice" => "0.00000010",
+            "tickSize" => "0.00000010"
+          },
+          quantity: %{
+            "filterType" => "LOT_SIZE",
+            "maxQty" => "9000000.00000000",
+            "minQty" => "1.00000000",
+            "stepSize" => "1.00000000"
+          }
+        }
+      }
+  """
+  @spec exchange_info_filter(String.t()) :: {:ok, map} | {:error, String.t()}
+  def exchange_info_filter(pair) do
+    with [informations] <- Enum.filter(load_exchange_info(), &(&1["symbol"] == pair)) do
+      info =
+        Enum.reduce(informations["filters"], %{}, fn
+          %{"filterType" => "PRICE_FILTER"} = filter, acc ->
+            Map.merge(acc, %{price: filter})
+
+          %{"filterType" => "LOT_SIZE"} = filter, acc ->
+            Map.merge(acc, %{quantity: filter})
+
+          _, acc ->
+            acc
+        end)
+
+      {:ok, info}
+    else
+      _ -> {:error, "#{pair} not found in exchange info"}
+    end
+  end
+
+  @doc false
+  def right_quantity?(quantity, %{quantity: info}) do
+    max = String.to_float(info["maxQty"])
+    min = String.to_float(info["minQty"])
+    quantity >= min and quantity <= max
+  end
+
+  @doc false
+  def trim_quantity(quantity, %{quantity: info}) do
+    decimal = String.to_float(info["stepSize"])
+    [_a, decimal] = String.split("#{decimal}", ".")
+
+    case decimal == "0" do
+      true ->
+        trunc(quantity) * 1.0
+
+      false ->
+        step_size = String.length(decimal)
+        Float.floor(quantity, step_size)
+    end
+  end
+
+  @doc false
+  def right_price?(price, %{price: info}) do
+    max = String.to_float(info["maxPrice"])
+    min = String.to_float(info["minPrice"])
+    price >= min and price <= max
+  end
+
+  @doc false
+  def trim_price(price, %{price: info}) do
+    decimal = String.to_float(info["tickSize"])
+    [_a, decimal] = String.split("#{decimal}", ".")
+
+    case decimal == "0" do
+      true ->
+        trunc(price) * 1.0
+
+      false ->
+        step_size = String.length(decimal)
+        Float.floor(price, step_size)
+    end
+  end
+
+  @doc """
+  TODO
+  """
+  def save_trade_from_oco(symbol, price_bought, [order_1, order_2]) do
+    orders =
+      case order_1["price"] > order_2["price"] do
+        true -> %{tp: order_1, stop: order_2}
+        false -> %{tp: order_2, stop: order_1}
+      end
+
+    save_trade(%{
+      price: price_bought,
+      symbol: symbol,
+      stop_loss_order_id: "#{orders.stop["orderId"]}",
+      take_profit_order_id: "#{orders.tp["orderId"]}"
+    })
+  end
+
+  defp oco_order(
+         %RM{
+           stop_loss: stop_loss,
+           limit: limit,
+           quantity: quantity,
+           pair: pair,
+           pair_price: pair_price
+         },
+         tp
+       ) do
+    with {_atom, true} <- {:price, pair_price > stop_loss},
+         {_atom, true} <- {:stop, stop_loss > limit},
+         {_atom, true} <- {:tp, tp > pair_price} do
+      @api.create_oco_order(pair, "SELL", quantity, tp, stop_loss, limit)
+    else
+      {:price, false} -> {:error, "Sell part: price < stop"}
+      {:stop, false} -> {:error, "Sell part: stop < limit"}
+      {:tp, false} -> {:error, "Sell part: tp < price"}
+    end
+  end
+
+  @doc """
+  Saves a trade. Check:
+    - if stop_loss_order_id and take_profit_order_id exist 
+    - if there are the same quantity
 
   # Examples
 
@@ -163,8 +390,7 @@ defmodule Pex.BinanceTrade do
         })
       {:ok, %Trade{}}
   """
-  @impl Pex.Exchange
-  def create_trade(%{
+  def save_trade(%{
         stop_loss_order_id: stop_loss_order_id,
         take_profit_order_id: take_profit_order_id,
         price: price,
@@ -191,145 +417,6 @@ defmodule Pex.BinanceTrade do
           price: price,
           platform: "binance"
         })
-    end
-  end
-
-  @doc """
-  Creates a trade with shad strategy
-
-  # Examples
-
-      iex> create_shad(
-        %{
-          symbol: "AIONUSDT",
-          take_profit_order_id: "122658019",
-          price: 1.0
-        })
-      {:ok, %Trade{}}
-  """
-  @impl Pex.Exchange
-  def create_shad(%{
-        take_profit_order_id: take_profit_order_id,
-        price: price,
-        symbol: symbol
-      }) do
-    {:ok, orders} = @api.get_open_orders(symbol)
-
-    case Enum.find(orders, &(&1.order_id == String.to_integer(take_profit_order_id))) do
-      nil ->
-        {:error, "take_profit_order_id not found"}
-
-      take_profit ->
-        Data.create_trade(%{
-          symbol: symbol,
-          quantity: take_profit.orig_qty,
-          take_profit: take_profit.price,
-          take_profit_order_id: take_profit_order_id,
-          side: take_profit.side,
-          price: price,
-          platform: "binance"
-        })
-    end
-  end
-
-  @doc """
-  Places a order market buy
-  """
-  @impl Pex.Exchange
-  def market_buy(symbol, quantity, tp, stop) do
-    {:ok, %{price: price}} = @api.get_price(symbol)
-    price = String.to_float(price)
-
-    {:ok, _coin} = @api.order_market_buy(symbol, quantity)
-    strategy = strategy_for_buy_market(price, stop)
-
-    params =
-      %{
-        price: price,
-        symbol: symbol,
-        tp: tp,
-        quantity: quantity
-      }
-      |> Map.merge(strategy)
-
-    place_trade_for_buy_market(params)
-  end
-
-  defp strategy_for_buy_market(price, nil) when is_float(price),
-    do: %{tp: price * 2, stop: nil, limit: nil}
-
-  defp strategy_for_buy_market(price, stop)
-       when is_float(price)
-       when is_float(stop) do
-    limit = RM.computes_limit_from_stop(stop)
-    %{stop: stop, limit: limit}
-  end
-
-  defp place_trade_for_buy_market(%{
-         symbol: symbol,
-         quantity: quantity,
-         tp: tp,
-         stop: nil,
-         limit: nil
-       }) do
-    {:ok, order} = @api.order_limit_sell(symbol, quantity, tp)
-
-    %{
-      take_profit_order_id: "#{order.order_id}",
-      price: tp,
-      symbol: symbol
-    }
-    |> create_shad()
-  end
-
-  defp place_trade_for_buy_market(%{
-         price: price,
-         stop: stop,
-         tp: tp,
-         limit: limit,
-         quantity: quantity,
-         symbol: symbol
-       }) do
-    compare = fn
-      _atom, true -> true
-      atom, false -> atom
-    end
-
-    with true <- compare.(:price, price > stop),
-         true <- compare.(:stop, stop > limit),
-         true <- compare.(:tp, tp > price) do
-      {:ok, %{"orderReports" => order_reports}} =
-        @api.create_oco_order(symbol, "SELL", quantity, tp, stop, limit)
-
-      create_trade_from_oco(symbol, price, order_reports)
-    else
-      :price -> {:error, "price < stop"}
-      :stop -> {:error, "stop < limit"}
-      :tp -> {:error, "tp < price"}
-    end
-  end
-
-  @doc """
-  Creates a trade if oco has been made outside of livebook
-  """
-  def create_trade_from_oco(symbol, price_bought, order_reports) do
-    orders = determine_oco_orders(order_reports)
-
-    create_trade(%{
-      price: price_bought,
-      symbol: symbol,
-      stop_loss_order_id: "#{orders.stop["orderId"]}",
-      take_profit_order_id: "#{orders.tp["orderId"]}"
-    })
-  end
-
-  @doc """
-  Get take_profit order and stop_loss order from oco response
-  """
-  def determine_oco_orders([order1, order2]) do
-    case order1["price"] > order2["price"] do
-      true -> %{tp: order1, stop: order2}
-      false -> %{tp: order2, stop: order1}
     end
   end
 end
