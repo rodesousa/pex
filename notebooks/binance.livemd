@@ -79,17 +79,15 @@ Pex.Data.delete_trade(id)
 
 ## Risk management
 
-<!-- livebook:{"livebook_object":"cell_input","name":"pair","type":"text","value":"KNC/USDT"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"pair","type":"text","value":"OCEANUSDT"} -->
 
-<!-- livebook:{"livebook_object":"cell_input","name":"distance","type":"number","value":"21.0"} -->
+<!-- livebook:{"livebook_object":"cell_input","name":"distance","type":"number","value":"15.0"} -->
 
 ```elixir
 {distance, _} = IO.gets("distance") |> Float.parse()
 pair = IO.gets("pair") |> String.trim("\n")
 
-[coin_1, coin_2] = String.split(pair, "/")
-
-{:ok, risk} = Pex.BinanceTrade.init_risk_management(coin_1, coin_2, distance)
+{:ok, risk} = Pex.BinanceTrade.init_risk_management(pair, distance)
 
 "#{risk.quantity} #{pair} pour un total de #{risk.cost} $ avec un stop loss à #{risk.stop_loss} (prix: #{risk.pair_price})"
 ```

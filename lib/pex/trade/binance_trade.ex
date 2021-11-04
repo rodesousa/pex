@@ -168,7 +168,7 @@ defmodule Pex.BinanceTrade do
   def trade_buy(pair, tp, distance \\ nil) do
     with {:ok, risk} <-
            init_risk_management(pair, distance),
-         {:buy, risk, {:ok, _coin}} <-
+         {:buy, _risk, {:ok, _coin}} <-
            {:buy, risk, @api.order_market_buy(pair, risk.quantity)},
          {:ok, %{"orderReports" => order_reports}} <-
            oco_order(risk, tp),
@@ -190,12 +190,12 @@ defmodule Pex.BinanceTrade do
 
   # Examples
 
-      iex> init_risk_management("SOL", "USDT", 10.0)
+      iex> init_risk_management("SOLUSDT", 10.0)
       {:ok, %RiskManagement{...}}
   """
-  @spec init_risk_management(String.t(), String.t(), float | nil) ::
+  @spec init_risk_management(String.t(), float | nil) ::
           {:ok, %RM{}} | {:error, String.t()}
-  def init_risk_management(_coin_1, _coin_2, nil) do
+  def init_risk_management(_pair, nil) do
     {:error, "shad not implemented"}
   end
 
