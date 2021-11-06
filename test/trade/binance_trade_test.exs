@@ -78,18 +78,22 @@ defmodule Pex.BinanceTradeTest do
   # assert {:error, "take_profit_order_id not found"} = BT.create_shad(param)
   # end
 
-  test "trade_buy/4 with valid data" do
-    assert {:ok, %Trade{} = trade} = BT.trade_buy("CRV", "USDT", 300.44, 10.0)
+  # test "trade_buy/4 with valid data" do
+  # assert {:ok, %Trade{} = trade} = BT.trade_buy("CRV", "USDT", 300.44, 10.0)
 
-    assert trade.take_profit > trade.stop_loss
-    assert trade.take_profit == 3.44000000
-    assert trade.stop_loss == 2.79000000
-    assert trade.symbol == "CRVUSDT"
-    assert trade.quantity == 171.0
-    assert trade.side == "SELL"
-    assert trade.platform == "binance"
-    assert trade.stop_loss_order_id == "383059912"
-    assert trade.take_profit_order_id == "383059913"
+  # assert trade.take_profit > trade.stop_loss
+  # assert trade.take_profit == 3.44000000
+  # assert trade.stop_loss == 2.79000000
+  # assert trade.symbol == "CRVUSDT"
+  # assert trade.quantity == 171.0
+  # assert trade.side == "SELL"
+  # assert trade.platform == "binance"
+  # assert trade.stop_loss_order_id == "383059912"
+  # assert trade.take_profit_order_id == "383059913"
+  # end
+
+  test "trade_buy/4 with valid data" do
+    assert :ok = BT.trade_buy("CRV", "USDT", 300.44, 10.0)
   end
 
   test "trade_buy/4 with invalid data" do

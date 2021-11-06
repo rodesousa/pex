@@ -170,11 +170,11 @@ defmodule Pex.BinanceTrade do
            init_risk_management(pair, distance),
          {:buy, _risk, {:ok, _coin}} <-
            {:buy, risk, @api.order_market_buy(pair, risk.quantity)},
-         {:ok, %{"orderReports" => order_reports}} <-
-           oco_order(risk, tp),
-         {:ok, trade} <-
-           save_trade_from_oco(risk.pair, risk.pair_price, order_reports) do
-      {:ok, trade}
+         {:ok, %{"orderReports" => _order}} <-
+           oco_order(risk, tp) do
+      #  {:ok, trade} <-
+      #    save_trade_from_oco(risk.pair, risk.pair_price, order_reports) do
+      :ok
     else
       {:buy, risk, error} ->
         IO.inspect("During the order maket buy: risk #{inspect(risk)}")
