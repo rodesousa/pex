@@ -1,6 +1,7 @@
 defmodule Pex.BinanceTrade do
   alias Pex.Data
   alias Pex.RiskManagement, as: RM
+  require Logger
 
   @api Application.get_env(:pex, :binance_api)
   @exchange_info "binance_exchange_info.json"
@@ -125,43 +126,6 @@ defmodule Pex.BinanceTrade do
     end)
   end
 
-  # @doc """
-  # Creates a trade with shad strategy
-
-  ## Examples
-
-  # iex> create_shad(
-  # %{
-  # symbol: "AIONUSDT",
-  # take_profit_order_id: "122658019",
-  # price: 1.0
-  # })
-  # {:ok, %Trade{}}
-  # """
-  # def create_shad(%{
-  # take_profit_order_id: take_profit_order_id,
-  # price: price,
-  # symbol: symbol
-  # }) do
-  # {:ok, orders} = @api.get_open_orders(symbol)
-
-  # case Enum.find(orders, &(&1.order_id == String.to_integer(take_profit_order_id))) do
-  # nil ->
-  # {:error, "take_profit_order_id not found"}
-
-  # take_profit ->
-  # Data.create_trade(%{
-  # symbol: symbol,
-  # quantity: take_profit.orig_qty,
-  # take_profit: take_profit.price,
-  # take_profit_order_id: take_profit_order_id,
-  # side: take_profit.side,
-  # price: price,
-  # platform: "binance"
-  # })
-  # end
-  # end
-
   @doc """
   TODO
   """
@@ -176,10 +140,6 @@ defmodule Pex.BinanceTrade do
       #    save_trade_from_oco(risk.pair, risk.pair_price, order_reports) do
       :ok
     else
-      {:buy, risk, error} ->
-        IO.inspect("During the order maket buy: risk #{inspect(risk)}")
-        error
-
       error ->
         error
     end
@@ -226,6 +186,7 @@ defmodule Pex.BinanceTrade do
          }}
 
       error ->
+        Logger.error("Risk management constraints not respected = #{inspect(error)}")
         error
     end
   end
