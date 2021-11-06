@@ -8,8 +8,8 @@ defmodule Pex.Trade.KucoinTradeTest do
     assert balance == 1748.2
   end
 
-  test "coin_price_usdt/1" do
-    assert KT.coin_price_usdt(%{currencies: "KCS"}) == 15.44945491
+  test "coin_price/1" do
+    assert KT.coin_price(%{currencies: "KCS"}) == 15.44945491
   end
 
   test "coins_list/0" do
@@ -18,10 +18,6 @@ defmodule Pex.Trade.KucoinTradeTest do
     assert %{symbol: _s, free: _f, locked: _l} = coin
     inch = Enum.find(list, &(&1.symbol == "1INCH"))
     inch.locked == 22
-  end
-
-  test "coins_list_without_exchange_order" do
-    assert KT.coins_list_without_exchange_order() == ["CRPT", "ERG", "KCS", "HTR", "NIM"]
   end
 
   test "coin_has_stop_orders?/3" do
@@ -34,19 +30,22 @@ defmodule Pex.Trade.KucoinTradeTest do
     refute KT.coin_has_stop_orders?("WOO", "102.0", stop_orders)
   end
 
-  test "coins_list_without_trade/0" do
-    assert %{"1INCH-USDT" => list} = KT.coins_list_without_trade()
-    assert is_list(list)
+  test "init_risk_management/2 with valid data" do
+    assert {:ok,
+            %Pex.RiskManagement{
+              cost: 174.82,
+              distance: 10.0,
+              limit: 13.862,
+              pair: "KCS-USDT",
+              quantity: 11.3156,
+              stop_loss: 13.904,
+              pair_price: 15.44945491,
+              position: 174.82
+            }} = KT.init_risk_management("KCS-USDT", 10.0)
+  end
 
-    assert [
-             %{
-               order_id: _a,
-               price: _b,
-               quantity: _c,
-               symbol: _d
-             },
-             _list
-           ] = list
+  test "init_risk_management/2 with invalid data" do
+    assert_raise ArgumentError, fn -> KT.init_risk_management("ERROR-USDT", 10.0) end
   end
 
   test "create_trade/1 with valid data" do

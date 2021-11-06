@@ -13,4 +13,10 @@ defmodule Pex.ExchangeTest do
     assert infos["b"] == %{"b" => 2}
     assert infos["c"] == data.c
   end
+
+  test "trunc/2" do
+    assert 10.0 == Exchange.trunc(10.05, "0.1")
+    assert 10.05 == Exchange.trunc(10.05, "0.001")
+    assert 10.0 == Exchange.trunc(10.05, "1.0")
+  end
 end

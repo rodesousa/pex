@@ -1,11 +1,34 @@
 defmodule Pex.KucoinTrade do
   @behaviour Pex.Exchange
 
-  alias Pex.Data
+  alias Pex.Exchange
   alias Pex.RiskManagement, as: RM
+  require Logger
 
   @api Application.get_env(:pex, :kucoin_api)
+  @exchange_info "kucoin_exchange_info.json"
 
+  @doc """
+  Gets a binance exchange info for price filter and lot size
+  """
+  def load_exchange_info(), do: Pex.Exchange.load_exchange_from_file!(@exchange_info)
+
+  @doc """
+  Saves kucoin exchange info for price filter and lot size
+  """
+  def save_exchange_info() do
+    {:ok, %{"data" => data}} = ExKucoin.Market.Symbol.all()
+    Pex.Exchange.save_exchange_to_file!(@exchange_info, data)
+  end
+
+  @doc """
+  Returns account balance total in USDT
+
+  # Examples
+
+      iex> get_balance
+      1239.23
+  """
   @impl Pex.Exchange
   def get_balance() do
     {:ok, %{"data" => data}} = @api.get_account
@@ -15,7 +38,7 @@ defmodule Pex.KucoinTrade do
         0.0
 
       value, coin ->
-        value * coin_price_usdt(%{currencies: coin})
+        value * coin_price(%{currencies: coin})
     end
 
     data
@@ -36,15 +59,14 @@ defmodule Pex.KucoinTrade do
 
   # Examples
 
-      iex> coin_price_usdt("SOL")
+      iex> coin_price("SOL")
       1.0
   """
-  def coin_price_usdt(symbol) when is_binary(symbol), do: coin_price_usdt(%{currencies: symbol})
-  def coin_price_usdt(%{currencies: "USDT"}), do: 1
+  def coin_price(symbol) when is_binary(symbol), do: coin_price(%{currencies: symbol})
+  def coin_price(%{currencies: "USDT"}), do: 1
 
-  def coin_price_usdt(params) do
+  def coin_price(params) do
     {:ok, %{"data" => data}} = @api.get_price(params)
-
     [price] = Enum.map(data, fn {_symbol, price} -> price end)
 
     String.to_float(price)
@@ -58,7 +80,6 @@ defmodule Pex.KucoinTrade do
       iex> coins_list()
       [%{symbol: "SOL", free: 0.0, locked: 1.0}, ...}
   """
-  @impl Pex.Exchange
   def coins_list() do
     {:ok, %{"data" => data}} = @api.get_account
     {:ok, %{"data" => %{"items" => orders}}} = @api.get_stop_order()
@@ -80,35 +101,6 @@ defmodule Pex.KucoinTrade do
         case coin_has_stop_orders?(coin, available, orders) do
           false -> [%{symbol: coin, free: free, locked: locked} | acc]
           true -> [%{symbol: coin, free: 0, locked: locked + free} | acc]
-        end
-    end)
-  end
-
-  @doc """
-  List of coins whitout Kucoin order
-
-  # Examples
-
-      iex> coins_list_without_exchange_order
-      ["BNB"]
-  """
-  @impl Pex.Exchange
-  def coins_list_without_exchange_order() do
-    {:ok, %{"data" => data}} = @api.get_account
-    {:ok, %{"data" => %{"items" => orders}}} = @api.get_stop_order()
-
-    data
-    |> Enum.reduce([], fn
-      %{"currency" => "USDT"}, acc ->
-        acc
-
-      %{"available" => "0"}, acc ->
-        acc
-
-      %{"available" => available, "currency" => coin}, acc ->
-        case coin_has_stop_orders?(coin, available, orders) do
-          false -> [coin | acc]
-          true -> acc
         end
     end)
   end
@@ -136,142 +128,87 @@ defmodule Pex.KucoinTrade do
   end
 
   @doc """
-  Gets coins list without trade
+  Buy `pair`
+  Places a stop loss limit and a take profit limit computed by `distance`
 
   # Examples
 
-      iex> coins_list_without_trade()
-      %{"AIONUSDT" => %{order_id: 1, price: 10.0, quantity: 5.5, symbol: "BNB/USDT"}, ...}
+      iex> trade_buy("BNB-USDT", 10.0, 12.0)
+      :ok
   """
-  @impl Pex.Exchange
-  def coins_list_without_trade do
-    trades = Data.list_trades() |> Enum.filter(&(&1.platform == "kucoin"))
-    {:ok, %{"data" => %{"items" => orders}}} = @api.get_stop_order()
+  def trade_buy(pair, take_profit, distance \\ nil) do
+    {:ok, risk} = init_risk_management(pair, distance)
 
-    orders
-    |> Enum.reduce([], fn order, acc ->
-      create_list_without_order(acc, trades, order)
-    end)
-    |> Enum.group_by(&(&1.quantity && &1.symbol))
-  end
-
-  defp create_list_without_order(acc, trades, order) do
-    case find_orders(trades, order["id"]) do
-      nil ->
-        [
-          %{
-            symbol: order["symbol"],
-            order_id: order["id"],
-            quantity: order["size"],
-            price: order["stopPrice"]
-          }
-          | acc
-        ]
-
-      _ ->
-        acc
-    end
-  end
-
-  defp find_orders(orders, order_id) do
-    Enum.find(orders, fn order ->
-      order.take_profit_order_id == order_id or
-        order.stop_loss_order_id == order_id
-    end)
-  end
-
-  @doc """
-  Places a order market buy
-  """
-  def buy_market(coin, quantity, tp, stop, coin_trade \\ "USDT") do
-    {:ok, %{"data" => data}} = @api.get_price(coin)
-
-    price = String.to_float(data[coin])
-    pair = "#{coin}-#{coin_trade}"
-
-    # {:ok, %{"code" => "200000"}} =
-    # @api.new_order(%{
-    # "side" => "buy",
-    # "symbol" => pair,
-    # "type" => "market",
-    # "size" => quantity,
-    # "clientOid" => UUID.uuid1()
-    # })
-
-    with true <- tp > price do
-      strategy = market_strategy(price, stop)
-
-      params =
-        %{
-          price: price,
-          pair: pair,
-          tp: tp,
-          quantity: quantity
-        }
-        |> Map.merge(strategy)
-
-      market_sell(params)
-    else
-      _ -> {:error, "price > tp, but market buy have been done"}
-    end
-  end
-
-  defp market_strategy(price, nil) when is_float(price),
-    do: %{
-      tp: price * 2,
-      stop: nil,
-      limit: nil
-    }
-
-  defp market_strategy(price, stop)
-       when is_float(price)
-       when is_float(stop) do
-    %{
-      stop: stop,
-      limit: RM.computes_limit_from_stop(stop)
-    }
-  end
-
-  defp market_sell(%{
-         pair: pair,
-         quantity: quantity,
-         tp: tp,
-         price: price,
-         stop: nil,
-         limit: nil
-       }) do
-    "non"
-    |> IO.inspect()
-
-    {:ok, %{"code" => "200000", "data" => data}} =
+    # {:ok, %{"code" => "200000", "data" => %{"orderId" => order_id}}} =
+    {:ok, %{"code" => "200000"}} =
       @api.new_order(%{
-        "side" => "sell",
+        "side" => "buy",
         "symbol" => pair,
-        "type" => "limit",
-        "size" => quantity / 2.0,
-        "price" => tp,
+        "type" => "market",
+        "size" => risk.quantity,
         "clientOid" => UUID.uuid1()
       })
 
-    Data.create_trade(%{
-      symbol: pair,
-      quantity: quantity / 2.0,
-      take_profit: tp,
-      take_profit_order_id: data["orderId"],
-      side: "sell",
-      price: price,
-      platform: "kucoin"
-    })
+    market_sell(risk, take_profit)
   end
 
-  defp market_sell(%{
-         price: bought,
-         stop: stop_loss,
-         tp: tp,
-         limit: limit,
-         quantity: quantity,
-         pair: pair
-       }) do
+  @doc """
+  Returns a %RiskManagement{} if exchange constraints (price filter, quantity filter) are respected
+
+  # Examples
+
+      iex> init_risk_management("SOLUSDT", 10.0)
+      {:ok, %RiskManagement{...}}
+  """
+  @spec init_risk_management(String.t(), float | nil) ::
+          {:ok, %RM{}} | {:error, String.t()}
+  def init_risk_management(_pair, nil) do
+    {:error, "shad not implemented"}
+  end
+
+  def init_risk_management(pair, distance) do
+    [coin, _a] = String.split(pair, "-")
+    {:ok, %{"data" => data}} = @api.get_price(coin)
+    price = String.to_float(data[coin])
+
+    [
+      %{
+        "baseIncrement" => quantity_size,
+        "priceIncrement" => price_size
+      }
+    ] =
+      Pex.KucoinTrade.load_exchange_info()
+      |> Enum.filter(&(&1["name"] == pair))
+
+    risk =
+      Pex.RiskManagement.computes_risk(%{
+        balance: get_balance(),
+        distance: distance,
+        coin_price: price,
+        future: 1
+      })
+
+    {:ok,
+     %{
+       risk
+       | quantity: Exchange.trunc(risk.quantity, quantity_size),
+         stop_loss: Exchange.trunc(risk.stop_loss, price_size),
+         limit: Exchange.trunc(risk.limit, price_size),
+         pair: pair,
+         pair_price: price
+     }}
+  end
+
+  defp market_sell(
+         %{
+           price: bought,
+           stop: stop_loss,
+           limit: limit,
+           quantity: quantity,
+           pair: pair
+         },
+         take_profit
+       ) do
     compare = fn
       _atom, true -> true
       atom, false -> atom
@@ -279,11 +216,8 @@ defmodule Pex.KucoinTrade do
 
     with true <- compare.(:price, bought > stop_loss),
          true <- compare.(:stop, stop_loss > limit),
-         true <- compare.(:tp, tp > bought) do
-      "oui"
-      |> IO.inspect()
-
-      {:ok, %{"code" => "200000", "data" => %{"orderId" => stop_loss_order_id}}} =
+         true <- compare.(:tp, take_profit > bought) do
+      {:ok, %{"code" => "200000"}} =
         @api.new_stop_order(%{
           "clientOid" => UUID.uuid1(),
           "side" => "sell",
@@ -294,37 +228,27 @@ defmodule Pex.KucoinTrade do
           "stopPrice" => stop_loss
         })
 
-      {:ok, %{"code" => "200000", "data" => %{"orderId" => take_profit_order_id}}} =
+      {:ok, %{"code" => "200000"}} =
         @api.new_stop_order(%{
           "clientOid" => UUID.uuid1(),
           "side" => "sell",
           "symbol" => pair,
           "type" => "limit",
           "size" => quantity,
-          "price" => RM.computes_limit_from_stop(tp),
-          "stopPrice" => tp
+          "price" => RM.decrease(take_profit),
+          "stopPrice" => take_profit
         })
-
-      # {:ok, _a} =
-      # Data.create_trade(%{
-      # symbol: pair,
-      # quantity: quantity,
-      # stop_loss: stop_loss,
-      # stop_loss_order_id: stop_loss_order_id,
-      # take_profit: tp,
-      # take_profit_order_id: take_profit_order_id,
-      # side: "sell",
-      # price: bought,
-      # platform: "kucoin"
-      # })
     else
       :price ->
+        Logger.error("Sell is impossible because price < stop")
         {:error, "price < stop"}
 
       :stop ->
+        Logger.error("Sell is impossible because stop < limit")
         {:error, "stop < limit"}
 
       :tp ->
+        Logger.error("Sell is impossible because tp < price")
         {:error, "tp < price"}
 
       _ ->

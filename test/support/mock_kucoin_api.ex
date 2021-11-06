@@ -120,9 +120,6 @@ defmodule Pex.MockKucoinAPI do
      }}
   end
 
-  def get_price("KCS"),
-    do: {:ok, %{"code" => "200000", "data" => %{"KCS" => "15.44945491"}}}
-
   def get_price(%{currencies: "KCS"}),
     do: {:ok, %{"code" => "200000", "data" => %{"KCS" => "15.44945491"}}}
 
@@ -158,6 +155,12 @@ defmodule Pex.MockKucoinAPI do
 
   def get_price(%{currencies: "CRPT"}),
     do: {:ok, %{"code" => "200000", "data" => %{"CRPT" => "0.25702429"}}}
+
+  def get_price(%{currencies: "ERROR"}),
+    do: {:ok, %{"code" => "200000", "data" => %{}}}
+
+  def get_price(coin),
+    do: get_price(%{currencies: coin})
 
   def get_stop_order do
     {:ok,

@@ -52,4 +52,7 @@ defmodule Pex.RiskManagement do
       position: position
     }
   end
+
+  @doc false
+  def decrease(number), do: number * (1 - @decrease_rate)
 end
