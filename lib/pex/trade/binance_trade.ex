@@ -1,6 +1,7 @@
 defmodule Pex.BinanceTrade do
   alias Pex.Data
   alias Pex.RiskManagement, as: RM
+  alias Pex.Exchange
   require Logger
 
   @api Application.get_env(:pex, :binance_api)
@@ -171,16 +172,16 @@ defmodule Pex.BinanceTrade do
       future: 1
     }
 
-    {:ok, exchange_info} = exchange_info_filter(pair)
+    {:ok, %{price: price, quantity: quantity} = exchange_info} = exchange_info_filter(pair)
 
     case risk_constraints(Pex.RiskManagement.computes_risk(params), exchange_info) do
       {:ok, risk} ->
         {:ok,
          %{
            risk
-           | quantity: trim_quantity(risk.quantity, exchange_info),
-             stop_loss: trim_price(risk.stop_loss, exchange_info),
-             limit: trim_price(risk.limit, exchange_info),
+           | quantity: Exchange.trunc(risk.quantity, quantity["stepSize"]),
+             stop_loss: Exchange.trunc(risk.stop_loss, price["tickSize"]),
+             limit: Exchange.trunc(risk.limit, price["tickSize"]),
              pair: pair,
              pair_price: price
          }}
@@ -260,40 +261,10 @@ defmodule Pex.BinanceTrade do
   end
 
   @doc false
-  def trim_quantity(quantity, %{quantity: info}) do
-    decimal = String.to_float(info["stepSize"])
-    [_a, decimal] = String.split("#{decimal}", ".")
-
-    case decimal == "0" do
-      true ->
-        trunc(quantity) * 1.0
-
-      false ->
-        step_size = String.length(decimal)
-        Float.floor(quantity, step_size)
-    end
-  end
-
-  @doc false
   def right_price?(price, %{price: info}) do
     max = String.to_float(info["maxPrice"])
     min = String.to_float(info["minPrice"])
     price >= min and price <= max
-  end
-
-  @doc false
-  def trim_price(price, %{price: info}) do
-    decimal = String.to_float(info["tickSize"])
-    [_a, decimal] = String.split("#{decimal}", ".")
-
-    case decimal == "0" do
-      true ->
-        trunc(price) * 1.0
-
-      false ->
-        step_size = String.length(decimal)
-        Float.floor(price, step_size)
-    end
   end
 
   @doc """

@@ -151,11 +151,6 @@ defmodule Pex.BinanceTradeTest do
     refute BT.right_quantity?(0.002, info)
   end
 
-  test "trim_quantity/2" do
-    {:ok, info} = Pex.BinanceTrade.exchange_info_filter("DOTUSDT")
-    assert BT.trim_quantity(0.019, info) == 0.01
-  end
-
   test "right_price? with valid data" do
     {:ok, info} = Pex.BinanceTrade.exchange_info_filter("DOTUSDT")
     assert BT.right_price?(10.0, info)
@@ -164,11 +159,6 @@ defmodule Pex.BinanceTradeTest do
   test "right_price? with invalid data" do
     {:ok, info} = Pex.BinanceTrade.exchange_info_filter("DOTUSDT")
     refute BT.right_price?(0.002, info)
-  end
-
-  test "trim_price/2" do
-    {:ok, info} = Pex.BinanceTrade.exchange_info_filter("DOTUSDT")
-    assert BT.trim_price(0.019, info) == 0.01
   end
 
   test "init_risk_management/2 with valid data" do
