@@ -11,7 +11,9 @@ defmodule Pex.RiskManagement do
     :limit,
     :position,
     :pair,
-    :pair_price
+    :pair_price,
+    :take_profit,
+    :limit_take_profit
   ]
 
   @type t :: %__MODULE__{
@@ -22,7 +24,9 @@ defmodule Pex.RiskManagement do
           limit: float,
           position: float,
           pair: String.t(),
-          pair_price: String.t()
+          pair_price: String.t(),
+          take_profit: float,
+          limit_take_profit: float
         }
 
   @risk 1

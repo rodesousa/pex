@@ -137,7 +137,7 @@ defmodule Pex.KucoinTrade do
       :ok
   """
   def trade_buy(pair, take_profit, distance \\ nil) do
-    {:ok, risk} = init_risk_management(pair, distance)
+    {:ok, risk} = init_risk_management(pair, take_profit, distance)
 
     # {:ok, %{"code" => "200000", "data" => %{"orderId" => order_id}}} =
     {:ok, %{"code" => "200000"}} =
@@ -149,7 +149,7 @@ defmodule Pex.KucoinTrade do
         "clientOid" => UUID.uuid1()
       })
 
-    market_sell(risk, take_profit)
+    market_sell(risk)
   end
 
   @doc """
@@ -157,16 +157,16 @@ defmodule Pex.KucoinTrade do
 
   # Examples
 
-      iex> init_risk_management("SOL-USDT", 10.0)
+      iex> init_risk_management("SOL-USDT", 18.0, 10.0)
       {:ok, %RiskManagement{...}}
   """
-  @spec init_risk_management(String.t(), float | nil) ::
+  @spec init_risk_management(String.t(), float, float | nil) ::
           {:ok, %RM{}} | {:error, String.t()}
-  def init_risk_management(_pair, nil) do
+  def init_risk_management(_pair, _take_profit, nil) do
     {:error, "shad not implemented"}
   end
 
-  def init_risk_management(pair, distance) do
+  def init_risk_management(pair, take_profit, distance) do
     [coin, _a] = String.split(pair, "-")
     {:ok, %{"data" => data}} = @api.get_price(coin)
     price = String.to_float(data[coin])
@@ -195,20 +195,21 @@ defmodule Pex.KucoinTrade do
          stop_loss: Exchange.trunc(risk.stop_loss, price_size),
          limit: Exchange.trunc(risk.limit, price_size),
          pair: pair,
-         pair_price: price
+         pair_price: price,
+         take_profit: take_profit,
+         limit_take_profit: RM.decrease(take_profit) |> Exchange.trunc(price_size)
      }}
   end
 
-  defp market_sell(
-         %{
-           price: bought,
-           stop: stop_loss,
-           limit: limit,
-           quantity: quantity,
-           pair: pair
-         },
-         take_profit
-       ) do
+  def market_sell(%RM{
+        pair_price: bought,
+        stop_loss: stop_loss,
+        limit: limit,
+        quantity: quantity,
+        pair: pair,
+        take_profit: take_profit,
+        limit_take_profit: limit_take_profit
+      }) do
     compare = fn
       _atom, true -> true
       atom, false -> atom
@@ -216,7 +217,8 @@ defmodule Pex.KucoinTrade do
 
     with true <- compare.(:price, bought > stop_loss),
          true <- compare.(:stop, stop_loss > limit),
-         true <- compare.(:tp, take_profit > bought) do
+         true <- compare.(:tp, take_profit > bought),
+         true <- compare.(:tp, take_profit > limit_take_profit) do
       {:ok, %{"code" => "200000"}} =
         @api.new_stop_order(%{
           "clientOid" => UUID.uuid1(),
@@ -236,7 +238,7 @@ defmodule Pex.KucoinTrade do
           "type" => "limit",
           "size" => quantity,
           "stop" => "entry",
-          "price" => RM.decrease(take_profit),
+          "price" => limit_take_profit,
           "stopPrice" => take_profit
         })
     else
