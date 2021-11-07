@@ -157,7 +157,7 @@ defmodule Pex.KucoinTrade do
 
   # Examples
 
-      iex> init_risk_management("SOLUSDT", 10.0)
+      iex> init_risk_management("SOL-USDT", 10.0)
       {:ok, %RiskManagement{...}}
   """
   @spec init_risk_management(String.t(), float | nil) ::
@@ -177,7 +177,7 @@ defmodule Pex.KucoinTrade do
         "priceIncrement" => price_size
       }
     ] =
-      Pex.KucoinTrade.load_exchange_info()
+      load_exchange_info()
       |> Enum.filter(&(&1["name"] == pair))
 
     risk =
@@ -235,6 +235,7 @@ defmodule Pex.KucoinTrade do
           "symbol" => pair,
           "type" => "limit",
           "size" => quantity,
+          "stop" => "entry",
           "price" => RM.decrease(take_profit),
           "stopPrice" => take_profit
         })
